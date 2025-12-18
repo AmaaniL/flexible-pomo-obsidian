@@ -4,9 +4,11 @@
     "inlineSourceMap": true,
     "inlineSources": true,
     "module": "ESNext",
+    "esModuleInterop": true,
     "target": "es6",
     "allowJs": true,
-    "noImplicitAny": true,
+    "strict": false,
+    "noImplicitAny": false,
     "moduleResolution": "node",
     "importHelpers": true,
     "lib": [

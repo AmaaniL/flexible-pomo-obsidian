@@ -3,7 +3,7 @@
 import { App, TAbstractFile, TFile } from "obsidian";
 import { TextInputSuggest } from "./suggest";
 import { get_tfiles_from_folder } from "./Utils";
-import { errorWrapperSync } from "./Error";
+import { errorWrapperSync } from "./errorWrapper";
 import FlexiblePomoTimerPlugin from "../main";
 
 export enum FileSuggestMode {

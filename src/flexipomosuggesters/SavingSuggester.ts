@@ -1,6 +1,6 @@
 import {App, FuzzyMatch, FuzzySuggestModal, moment, Notice, TFile, TFolder} from "obsidian";
 import { get_tfiles_from_folder } from "src/flexipomosuggesters/Utils";
-import { errorWrapperSync } from "src/flexipomosuggesters/Error";
+import { errorWrapperSync } from "./errorWrapper";
 import { log_error } from "src/flexipomosuggesters/Log";
 import FlexiblePomoTimerPlugin from "../main";
 import {AppHelper} from "./app-helper";

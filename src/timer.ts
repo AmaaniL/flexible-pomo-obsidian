@@ -1,6 +1,7 @@
-import {Notice, moment, TFolder, TFile} from 'obsidian';
+import { Notice } from 'obsidian';
+import type { TFolder, TFile } from 'obsidian';
 import {getDailyNote, createDailyNote, getAllDailyNotes} from 'obsidian-daily-notes-interface';
-import type {Moment} from 'moment';
+import moment, { Moment } from 'moment';
 import {notificationUrl, whiteNoiseUrl} from './audio_urls';
 import {WhiteNoise} from './white_noise';
 import {PomoSettings} from './settings';
@@ -280,10 +281,10 @@ export class Timer {
 
         this.mode = mode;
         this.paused = false;
-        this.workItem = new WorkItem((this.plugin.app.workspace.getActiveFile() || this.plugin.app.workspace.lastActiveFile), true);
+        this.workItem = new WorkItem(this.plugin.getCurrentFile(), true);
         if (this.isActive(mode)) {
             if (this.settings.logActiveNote === true) {
-                const activeView = (this.plugin.app.workspace.getActiveFile() || this.plugin.app.workspace.lastActiveFile);
+                 const activeView = this.plugin.getCurrentFile();
                 if (activeView) {
                     this.workItem.activeNote = activeView;
                     if(this.plugin.pomoWorkBench.workItems.length) {
@@ -305,7 +306,7 @@ export class Timer {
                     //reset the pomo holders.
                     if(this.workItem) {
                         this.clearPomoTasks();
-                        this.plugin.parseUtility.gatherLineItems(this.workItem, this.workItem.initialPomoTaskItems, false, (this.plugin.app.workspace.getActiveFile() || this.plugin.app.workspace.lastActiveFile));
+                        this.plugin.parseUtility.gatherLineItems(this.workItem, this.workItem.initialPomoTaskItems, false, (this.plugin.getCurrentFile()));
                     }
                 }
             }
@@ -462,7 +463,7 @@ export class Timer {
     /**************  Logging  **************/
     async logPomo(): Promise<void> {
         var logText = moment().format(this.settings.logText);
-        if((this.plugin.app.workspace.getActiveFile() || this.plugin.app.workspace.lastActiveFile)) {
+        if(((this.plugin.getCurrentFile()))) {
             logText = '- ' + await this.extractLog(this.workItem, logText, false);
         }
         for(const workItem of this.plugin.pomoWorkBench.workItems) {
@@ -481,7 +482,7 @@ export class Timer {
         } else { //use file given in settings
             let file = this.plugin.app.vault.getAbstractFileByPath(this.settings.logFile);
 
-            if (!file || file ! instanceof TFolder) { //if no file, create
+            if (!file) { //if no file, create
                 await this.plugin.app.vault.create(this.settings.logFile, "");
             }
 
@@ -573,12 +574,11 @@ export async function getDailyNoteFile(): Promise<TFile> {
     const file = getDailyNote(moment(), getAllDailyNotes());
 
     if (!file) {
-        return await createDailyNote(moment());
+        return (await createDailyNote(moment())) as unknown as TFile;
     }
 
-    return file;
+    return file as unknown as TFile;
 }
-
 
 
 

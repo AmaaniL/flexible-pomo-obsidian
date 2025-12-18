@@ -129,7 +129,8 @@ export class WorkbenchItemsListView extends ItemView {
         });
 
         navFile.addEventListener('contextmenu', (event: MouseEvent) => {
-            const menu = new Menu(this.app);
+            const menu = new Menu();
+
             const file = this.app.vault.getAbstractFileByPath(currentFile.path);
             this.app.workspace.trigger(
                 'file-menu',

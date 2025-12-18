@@ -1,15 +1,14 @@
-import {Modal} from "obsidian";
-import FlexiblePomoTimerPlugin from "./main";
-import {WorkItem} from "./workitem";
+import { Modal, TFile } from 'obsidian';
+import FlexiblePomoTimerPlugin from './main';
+import { WorkItem } from './workitem';
 
 export class CurrentProgressModal extends Modal {
-
     private plugin: FlexiblePomoTimerPlugin;
     private mode: number;
 
-    constructor(plugin:FlexiblePomoTimerPlugin) {
-       super(plugin.app);
-       this.plugin = plugin;
+    constructor(plugin: FlexiblePomoTimerPlugin) {
+        super(plugin.app);
+        this.plugin = plugin;
     }
 
     openProgressModal(mode: number) {
@@ -17,87 +16,73 @@ export class CurrentProgressModal extends Modal {
         this.open();
     }
 
-    onOpen() {
+    async onOpen() {
         super.onOpen();
         this.contentEl.empty();
-        const ib = this.contentEl.createDiv('ib');
 
+        const container = this.contentEl.createDiv('ib');
 
-        this.postPomo(this.plugin.pomoWorkBench.workItems).then(() => {
-            for (const newWorkItem of this.plugin.pomoWorkBench.workItems) {
-                let workItems;
-                if (this.mode === 0) {
-                    workItems = newWorkItem.modifiedPomoTaskItems;
-                } else if (this.mode === 1) {
-                    // Show Open Items Onlly
-                    workItems = newWorkItem.postPomoTaskItems.filter((item) => {
-                        return item.isCompleted ? false : true;
-                    });
-                } else if(this.mode === 2) {
-                    // Show All Items
-                    workItems = newWorkItem.postPomoTaskItems;
-                } else if(this.mode === 3) {
-                    workItems = newWorkItem.postPomoTaskItems.filter((item) => {
-                        if((this.plugin.app.workspace.getActiveFile() || this.plugin.app.workspace.lastActiveFile) && item.filePath === (this.plugin.app.workspace.getActiveFile() ? this.plugin.app.workspace.getActiveFile().path : this.plugin.app.workspace.lastActiveFile.path) && !item.isCompleted) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    })
-                } else if(this.mode === 4) {
-                    workItems = newWorkItem.postPomoTaskItems.filter((item) => {
-                        if((this.plugin.app.workspace.getActiveFile() || this.plugin.app.workspace.lastActiveFile) && item.filePath === (this.plugin.app.workspace.getActiveFile() ? this.plugin.app.workspace.getActiveFile().path : this.plugin.app.workspace.lastActiveFile.path)) {
-                            return true;
-                        } else {
-                            return false;
-                        }
-                    })
-                } else if(this.mode === 5) {
-                    workItems = newWorkItem.postPomoTaskItems
-                    newWorkItem.hasActiveTask = false;
-                    if(workItems.length) {
-                        newWorkItem.postPomoTaskItems.forEach((x,i) => {
-                            if(!x.isCompleted) {
-                                newWorkItem.hasActiveTask = true;
-                            }
-                        });
-                    }
-                }
-                if(this.mode === 5) {
-                    if (workItems.length) {
-                        if(newWorkItem.hasActiveTask) {
-                            ib.createDiv({
-                                text: 'NOTE: ' + newWorkItem.activeNote.basename + "\n",
-                            }).addClass('flexible-highlight-font');
-                        }
-                    }
-                } else {
-                    if (workItems.length) {
-                        const div = ib.createDiv({
-                            text: 'NOTE: ' + newWorkItem.activeNote.basename + "\n",
-                        })
-                        div.addClass('flexible-highlight-font');
-                        const noteDiv = ib.createDiv('');
-                        for (const workItemTask of workItems) {
-                            noteDiv.createDiv({
-                                text: '  --> ' + (workItemTask.isCompleted ? '[X] ' : '[ ] ') + '- ' + workItemTask.lineContent
-                            })
-                        }
-                        noteDiv.createEl('br');
-                    }
-                }
+        await this.postPomo(this.plugin.pomoWorkBench.workItems);
+
+        for (const workItem of this.plugin.pomoWorkBench.workItems) {
+            let tasksToShow;
+
+            switch (this.mode) {
+                case 0:
+                    tasksToShow = workItem.modifiedPomoTaskItems;
+                    break;
+                case 1:
+                    tasksToShow = workItem.postPomoTaskItems.filter(t => !t.isCompleted);
+                    break;
+                case 2:
+                    tasksToShow = workItem.postPomoTaskItems;
+                    break;
+                case 3:
+                    tasksToShow = workItem.postPomoTaskItems.filter(t => 
+                        t.filePath === this.plugin.getCurrentFile()?.path && !t.isCompleted
+                    );
+                    break;
+                case 4:
+                    tasksToShow = workItem.postPomoTaskItems.filter(t => 
+                        t.filePath === this.plugin.getCurrentFile()?.path
+                    );
+                    break;
+                case 5:
+                    tasksToShow = workItem.postPomoTaskItems;
+                    workItem.hasActiveTask = tasksToShow.some(t => !t.isCompleted);
+                    break;
+                default:
+                    tasksToShow = [];
             }
-            }).then(() => {})
+
+            if (this.mode === 5) {
+                if (tasksToShow.length && workItem.hasActiveTask) {
+                    container.createDiv({
+                        text: `NOTE: ${workItem.activeNote.basename}\n`,
+                    }).addClass('flexible-highlight-font');
+                }
+            } else if (tasksToShow.length) {
+                container.createDiv({ text: `NOTE: ${workItem.activeNote.basename}\n` })
+                    .addClass('flexible-highlight-font');
+
+                const tasksContainer = container.createDiv('');
+                for (const task of tasksToShow) {
+                    tasksContainer.createDiv({
+                        text: `  --> ${task.isCompleted ? '[X] ' : '[ ] '}- ${task.lineContent}`,
+                    });
+                }
+                tasksContainer.createEl('br');
+            }
+        }
     }
 
-    private async postPomo(newWorkItems: Array<WorkItem>):Promise<void> {
-        for(const newWork of newWorkItems) {
-            await this.plugin.parseUtility.gatherPostPomoTaskItems(newWork);
+    private async postPomo(workItems: WorkItem[]): Promise<void> {
+        for (const item of workItems) {
+            await this.plugin.parseUtility.gatherPostPomoTaskItems(item);
         }
     }
 
     onClose() {
         super.onClose();
     }
-
 }
