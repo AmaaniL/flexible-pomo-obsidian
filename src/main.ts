@@ -11,6 +11,8 @@ import { SavingSuggester } from "./flexipomosuggesters/SavingSuggester";
 import { LoadingSuggester } from "./flexipomosuggesters/LoadingSuggester";
 import { FileUtility } from "./file_utility";
 import { askCustomTimeModal } from "./custom_time_modal";
+import { TaskTimerPane } from "./t";
+
 
 
 export default class FlexiblePomoTimerPlugin extends Plugin {
