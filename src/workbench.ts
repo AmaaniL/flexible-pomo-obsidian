@@ -10,7 +10,7 @@ import {WorkItem} from "./workitem";
 import {PomoTaskItem} from "./pomo_task_item";
 import {Mode} from "./timer";
 import {CurrentProgressModal} from "./current_progress_modal";
-import { TaskTimerPane } from "./task_timer_pane.ts";
+import { TaskTimerPane } from "./task_timer_pane";
 
 export default class FlexiblePomoWorkbench {
     public data: WorkbenchFilesData;
@@ -20,6 +20,8 @@ export default class FlexiblePomoWorkbench {
     public modified: boolean;
     workItems: WorkItem[];
     public current_progress_modal: CurrentProgressModal;
+    public taskTimerPane: TaskTimerPane | null = null;
+
 
     constructor(
         leaf: WorkspaceLeaf,
@@ -32,6 +34,7 @@ export default class FlexiblePomoWorkbench {
         this.workItems = new Array<WorkItem>();
         this.modified = false;
         this.current_progress_modal = new CurrentProgressModal(this.plugin);
+        
     }
 
     public async unlinkItem(workItem: WorkItem) {
@@ -98,29 +101,30 @@ export default class FlexiblePomoWorkbench {
         let leaf: WorkspaceLeaf = null;
         for (leaf of this.plugin.app.workspace.getLeavesOfType(WorkbenchItemsListViewType)) {
             if (leaf.view instanceof WorkbenchItemsListView) return;
-            // The view instance was created by an older version of the plugin,
-            // so clear it and recreate it (so it'll be the new version).
-            // This avoids the need to reload Obsidian to update the plugin.
-            //await leaf.setViewState({type: 'empty'});
             break;
         }
-        if(this.plugin.settings.workbench_location && this.plugin.settings.workbench_location === 'left') {
-            (leaf ?? this.plugin.app.workspace.getLeftLeaf(false)).setViewState({
-                type: WorkbenchItemsListViewType,
-                active: true,
-            });
-        } else if(this.plugin.settings.workbench_location && this.plugin.settings.workbench_location === 'right'){
-            (leaf ?? this.plugin.app.workspace.getRightLeaf(false)).setViewState({
-                type: WorkbenchItemsListViewType,
-                active: true,
-            });
+    
+        if(this.plugin.settings.workbench_location === 'left') {
+            leaf = leaf ?? this.plugin.app.workspace.getLeftLeaf(false);
         } else {
-            (leaf ?? this.plugin.app.workspace.getRightLeaf(false)).setViewState({
-                type: WorkbenchItemsListViewType,
-                active: true,
-            });
+            leaf = leaf ?? this.plugin.app.workspace.getRightLeaf(false);
         }
+    
+        await leaf.setViewState({
+            type: WorkbenchItemsListViewType,
+            active: true,
+        });
+    
+        // Wait for the view to attach
+        await this.plugin.app.workspace.revealLeaf(leaf);
+    
+        // Destroy old pane if exists
+        if (this.taskTimerPane) this.taskTimerPane.destroy();
+    
+        // Create Task Timer Pane
+        this.taskTimerPane = new TaskTimerPane(this.plugin.app, leaf, this.workItems[0] || null);
     };
+    
 
     linkFile = async (openedFile: TFile, initialWorkItems: PomoTaskItem[]): Promise<void> => {
         let existingFile:boolean = false;

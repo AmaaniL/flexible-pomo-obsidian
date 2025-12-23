@@ -8,6 +8,7 @@
     "target": "es6",
     "allowJs": true,
     "strict": false,
+    "sourceMap": true,
     "noImplicitAny": false,
     "moduleResolution": "node",
     "importHelpers": true,
