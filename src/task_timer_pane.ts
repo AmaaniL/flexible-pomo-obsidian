@@ -2,6 +2,7 @@ import { App, WorkspaceLeaf } from "obsidian";
 import { WorkItem } from "./workitem";
 import { TaskRuntime } from "./task_runtime";
 import { ExpirationModal } from "./expiration_modal";
+import { FilePersistence } from "./file_persistence";
 
 export class TaskTimerPane {
     private app: App;
@@ -69,18 +70,28 @@ export class TaskTimerPane {
                     this.app,
                     runtime,
                     // onComplete
-                    () => {
+                    async () => {
                         runtime.completed = true;
                         runtime.remainingMs = 0;
                         this.render(); // update UI immediately
+            
+                        // Persist completion to markdown
+                        if (this.workItem) {
+                            await new FilePersistence(this.app).updateWorkItemFile(this.workItem);
+                        }
                     },
                     // onExtend
-                    (extraMs: number) => {
+                    async (extraMs: number) => {
                         runtime.remainingMs += extraMs;
                         runtime.startedAt = Date.now();
                         runtime.paused = false;
                         this.notifiedTasks.delete(runtime); // allow future notification if time expires again
                         this.render();
+            
+                        // Persist updated duration to markdown
+                        if (this.workItem) {
+                            await new FilePersistence(this.app).updateWorkItemFile(this.workItem);
+                        }
                     }
                 ).open();
             }
