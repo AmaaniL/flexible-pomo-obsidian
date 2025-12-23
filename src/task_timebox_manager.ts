@@ -2,14 +2,20 @@ import { WorkItem } from "./workitem";
 import { TaskRuntime } from "./task_runtime";
 import { PomoTaskItem } from "./pomo_task_item";
 import { Timer } from "./timer";
+import { Notice } from "obsidian";
+import { TaskExpirationModal } from "./task_expiration_modal";
+import { App } from "obsidian";
+
 
 export class TaskTimeboxManager {
+    private app: App;
     private workItem: WorkItem;
     private runtimes: Map<PomoTaskItem, TaskRuntime>;
     private activeRuntime: TaskRuntime | null;
     private timer: Timer;
 
-    constructor(workItem: WorkItem, timer: Timer) {
+    constructor(app: App, workItem: WorkItem, timer: Timer) {
+        this.app = app;
         this.workItem = workItem;
         this.timer = timer;
         this.runtimes = workItem.runtimes;
@@ -98,11 +104,24 @@ export class TaskTimeboxManager {
     private onActiveTaskExpired() {
         if (!this.activeRuntime) return;
     
-        this.activeRuntime.remainingMs = 0;
+        const runtime = this.activeRuntime;
     
+        runtime.remainingMs = 0;
         this.pauseActiveTask();
     
-
-        console.log("Task timebox expired:", this.activeRuntime.task.lineContent);
+        new Notice(`⏱ Task timebox finished: ${runtime.task.lineContent.trim()}`);
+    
+        new TaskExpirationModal(
+            this.app,
+            runtime,
+            () => {
+                runtime.completed = true;
+            },
+            (extraMs) => {
+                runtime.remainingMs = extraMs;
+                runtime.estimatedMs += extraMs;
+                this.startTask(runtime.task);
+            }
+        ).open();
     }
 }
