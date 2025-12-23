@@ -10,6 +10,7 @@ import {WorkItem} from "./workitem";
 import {PomoTaskItem} from "./pomo_task_item";
 import {Mode} from "./timer";
 import {CurrentProgressModal} from "./current_progress_modal";
+import { TaskTimerPane } from "./task_timer_pane.ts";
 
 export default class FlexiblePomoWorkbench {
     public data: WorkbenchFilesData;
