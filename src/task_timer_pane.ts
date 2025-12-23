@@ -1,6 +1,7 @@
-import { App, WorkspaceLeaf } from "obsidian";
+import { App, WorkspaceLeaf, Notice } from "obsidian";
 import { WorkItem } from "./workitem";
 import { TaskRuntime } from "./task_runtime";
+import { ExpirationModal } from "./expiration_modal";
 
 export class TaskTimerPane {
     private app: App;
@@ -8,6 +9,7 @@ export class TaskTimerPane {
     public workItem: WorkItem | null;
     private container: HTMLElement;
     private interval: number | null = null;
+    private notifiedTasks: Set<TaskRuntime> = new Set(); // prevent multiple notifications
 
     constructor(app: App, leaf: WorkspaceLeaf, workItem: WorkItem | null = null) {
         this.app = app;
@@ -16,19 +18,22 @@ export class TaskTimerPane {
 
         this.container = leaf.view.containerEl.createDiv({ cls: "task-timer-pane" });
 
-        // start updating
         this.interval = window.setInterval(() => this.render(), 1000);
     }
 
-    /** Set or change the active WorkItem dynamically */
     public setWorkItem(workItem: WorkItem | null) {
         this.workItem = workItem;
+        this.notifiedTasks.clear(); // reset notifications for new WorkItem
         this.render();
     }
 
-    /** Render the pane */
+    private formatTime(date: Date | null): string {
+        if (!date) return "--:--";
+        return date.getHours().toString().padStart(2, "0") + ":" +
+               date.getMinutes().toString().padStart(2, "0");
+    }
+
     public render() {
-        // clear container
         this.container.empty();
 
         if (!this.workItem || !this.workItem.runtimes || this.workItem.runtimes.size === 0) {
@@ -38,42 +43,56 @@ export class TaskTimerPane {
 
         const runtimes = [...this.workItem.runtimes.values()];
 
-        // Header
         this.container.createEl("h4", { text: "Task Timer Pane" });
 
-        // Task list
+        let totalRemaining = 0;
+
         runtimes.forEach(runtime => {
             const taskEl = this.container.createDiv({ cls: "task-timer-item" });
             const name = runtime.task.lineContent.trim();
-            let status = runtime.completed ? "✅ Completed" : runtime.paused ? "⏸ Paused" : "▶ Active";
+            const status = runtime.completed ? "✅ Completed" : runtime.paused ? "⏸ Paused" : "▶ Active";
 
-            const remainingMs = runtime.paused
-                ? runtime.remainingMs
-                : Math.max(runtime.remainingMs - (Date.now() - (runtime.startedAt || 0)), 0);
+            const remainingMs = runtime.getDynamicRemaining();
+            totalRemaining += remainingMs;
 
             const remainingMin = Math.floor(remainingMs / 60000);
             const remainingSec = Math.floor((remainingMs % 60000) / 1000);
 
-            taskEl.setText(`${name} — ${status} — ${remainingMin}m ${remainingSec}s`);
-        });
+            // Compute per-task finish time
+            const finishTime = runtime.paused ? null : new Date(Date.now() + remainingMs);
 
-        // Total remaining time
-        const totalRemaining = runtimes
-            .filter(rt => !rt.completed)
-            .reduce((acc, rt) => {
-                const rem = rt.paused
-                    ? rt.remainingMs
-                    : Math.max(rt.remainingMs - (Date.now() - (rt.startedAt || 0)), 0);
-                return acc + rem;
-            }, 0);
+            taskEl.setText(`${name} — ${status} — ${remainingMin}m ${remainingSec}s — finish: ${this.formatTime(finishTime)}`);
+
+            // Notify if task time expired and not yet notified
+            if (!runtime.completed && !runtime.paused && remainingMs <= 0 && !this.notifiedTasks.has(runtime)) {
+                this.notifiedTasks.add(runtime);
+            
+                new ExpirationModal(
+                    this.app,
+                    runtime,
+                    // onComplete callback
+                    () => {
+                        runtime.completed = true;
+                        runtime.remainingMs = 0;
+                    },
+                    // onExtend callback
+                    (extraMs: number) => {
+                        runtime.remainingMs += extraMs;
+                        runtime.startedAt = Date.now(); // restart countdown
+                        runtime.paused = false;
+                    }
+                ).open();
+            }
+        });
 
         const totalMin = Math.floor(totalRemaining / 60000);
         const totalSec = Math.floor((totalRemaining % 60000) / 1000);
-
         this.container.createEl("div", { text: `Total Remaining: ${totalMin}m ${totalSec}s` });
+
+        const finishTimestamp = Date.now() + totalRemaining;
+        this.container.createEl("div", { text: `Expected Finish: ${this.formatTime(new Date(finishTimestamp))}` });
     }
 
-    /** Stop interval and remove DOM element */
     public destroy() {
         if (this.interval) {
             window.clearInterval(this.interval);
