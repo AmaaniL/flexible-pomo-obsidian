@@ -14,6 +14,7 @@ import {WorkItem} from "./workitem";
 const MILLISECS_IN_MINUTE = 60 * 1000;
 const electron = require('electron')
 
+
 export const enum Mode {
     Pomo,
     ShortBreak,
@@ -44,7 +45,8 @@ export class Timer {
     allowExtendedPomodoroForSession: boolean;
     win: any;
     workItem: WorkItem;
-
+    private countdownEndAt: number | null = null;
+    private onCountdownFinished: (() => void) | null = null;
 
     constructor(plugin: FlexiblePomoTimerPlugin) {
         this.plugin = plugin;
@@ -71,7 +73,19 @@ export class Timer {
     /*Set status bar to remaining time or empty string if no timer is running*/
 
     //handling switching logic here, should spin out
-    async setStatusBarText(): Promise<string> {
+    async setStatusBarText(): Promise<string> {    if (this.countdownEndAt !== null) {
+        const remaining = this.countdownEndAt - Date.now();
+
+        if (remaining <= 0 && !this.triggered) {
+            this.triggered = true;
+
+            const cb = this.onCountdownFinished;
+            this.quitTimer();
+
+            if (cb) cb();
+            return ""; // early exit since countdown is finished
+        }
+    }
         if (this.mode !== Mode.NoTimer) {
             if(this.mode !== Mode.Stopwatch) {
                 if (this.extendPomodoroTime === false) {
@@ -395,7 +409,18 @@ export class Timer {
         }
     }
 
-
+    startCountdown(durationMs: number, onFinish: () => void) {
+        this.quitTimer(); // ensure clean state
+    
+        this.mode = Mode.PomoCustom; // reuse existing ticking logic
+        this.extendPomodoroTime = false;
+    
+        this.countdownEndAt = Date.now() + durationMs;
+        this.onCountdownFinished = onFinish;
+    
+        this.startTime = window.moment();
+        this.triggered = false;
+    }
     /**************  Notifications  **************/
 
     /*Sends notification corresponding to whatever the mode is at the moment it's called*/
