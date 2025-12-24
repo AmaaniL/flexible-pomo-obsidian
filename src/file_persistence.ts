@@ -1,37 +1,53 @@
 import { App, TFile } from "obsidian";
 import { WorkItem } from "./workitem";
+import { PomoTaskItem } from "./pomo_task_item";
 
 export class FilePersistence {
-    private app: App;
+  private app: App;
 
-    constructor(app: App) {
-        this.app = app;
-    }
+  constructor(app: App) {
+    this.app = app;
+  }
 
-    async updateWorkItemFile(workItem: WorkItem): Promise<void> {
-        const vault = this.app.vault; // use this.app
-        const file = workItem.activeNote as TFile;
+  private formatMsToText(ms: number): string {
+    const hours = Math.floor(ms / 3600000);
+    const minutes = Math.floor((ms % 3600000) / 60000);
+    const parts: string[] = [];
+    if (hours) parts.push(`${hours}h`);
+    if (minutes) parts.push(`${minutes}m`);
+    return parts.join("");
+  }
 
-        const content = await vault.read(file);
-        const lines = content.split("\n");
+  async updateWorkItemFile(workItem: WorkItem): Promise<void> {
+    const file = workItem.activeNote as TFile;
+    const vault = this.app.vault;
 
-        const updatedLines = lines.map(line => {
-            const trimmed = line.trim();
-            if (trimmed.startsWith("- [ ]") || trimmed.startsWith("- [x]") || trimmed.startsWith("- [X]")) {
-                const task = workItem.initialPomoTaskItems.find(
-                    t => t.lineContent === trimmed.replace(/^- \[[ xX]\] /, "")
-                );
-                if (task) {
-                    const runtime = workItem.runtimes.get(task);
-                    if (runtime) {
-                        const completedMark = runtime.completed ? "x" : " ";
-                        return `- [${completedMark}] ${task.lineContent}`;
-                    }
-                }
-            }
-            return line;
-        });
+    const content = await vault.read(file);
+    const lines = content.split("\n");
 
-        await vault.modify(file, updatedLines.join("\n"));
-    }
+    const updatedLines = lines.map((line) => {
+      const trimmed = line.trim();
+      if (
+        trimmed.startsWith("- [ ]") ||
+        trimmed.startsWith("- [x]") ||
+        trimmed.startsWith("- [X]")
+      ) {
+        const rawText = trimmed.replace(/^-\s\[[ xX]\]\s*/, "");
+        const task = workItem.initialPomoTaskItems.find(
+          (t) => t.lineContent === rawText
+        );
+        if (task) {
+          const runtime = workItem.runtimes.get(task);
+          const completedMark = runtime?.completed ? "x" : " ";
+          const durationText = task.estimatedMs
+            ? ` ⏱ ${this.formatMsToText(task.estimatedMs)}`
+            : "";
+          return `- [${completedMark}] ${task.lineContent}${durationText}`;
+        }
+      }
+      return line;
+    });
+
+    await vault.modify(file, updatedLines.join("\n"));
+  }
 }

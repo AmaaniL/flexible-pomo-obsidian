@@ -2,8 +2,8 @@ export class PomoTaskItem {
   lineContent: string;
   isCompleted: boolean;
   filePath: string;
-  estimatedMs?: number;
-  naturalLanguageDate?: Date;
+  estimatedMs?: number; // new field
+  naturalLanguageDate?: Date; // optional
 
   constructor(
     lineContent: string,
@@ -18,6 +18,7 @@ export class PomoTaskItem {
     this.estimatedMs = estimatedMs;
     this.naturalLanguageDate = naturalLanguageDate;
   }
+
   public parseDurationFromText(text: string): number | undefined {
     /**
      * Matches:
