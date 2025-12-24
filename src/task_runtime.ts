@@ -63,4 +63,9 @@ export class TaskRuntime {
   isExpired(): boolean {
     return !this.paused && this.getDynamicRemaining() <= 0;
   }
+  isEligible(): boolean {
+    return (
+      !this.completed && this.estimatedMs !== undefined && this.estimatedMs > 0
+    );
+  }
 }
