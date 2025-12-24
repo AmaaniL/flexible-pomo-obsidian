@@ -6,8 +6,8 @@ import { FilePersistence } from "./file_persistence";
 import FlexiblePomoTimerPlugin from "./main";
 
 export class TaskTimerPane {
-  private app: App;
   private plugin: FlexiblePomoTimerPlugin;
+  private app: App;
   private leaf: WorkspaceLeaf;
   public workItem: WorkItem | null;
   private container: HTMLElement;
@@ -27,7 +27,6 @@ export class TaskTimerPane {
     this.container = leaf.view.containerEl.createDiv({
       cls: "task-timer-pane",
     });
-
     this.interval = window.setInterval(() => this.render(), 1000);
   }
 
