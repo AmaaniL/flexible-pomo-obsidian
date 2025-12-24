@@ -1,7 +1,8 @@
-import { PomoTaskItem } from "./pomo_task_item";
+import { PomoTaskItem } from "./PomoTaskItem";
 import FlexiblePomoTimerPlugin from "./main";
 import { WorkItem } from "./workitem";
 import { TFile } from "obsidian";
+import { parseDurationFromText } from "./utils";
 
 export class ParseUtility {
   plugin: FlexiblePomoTimerPlugin;
@@ -10,64 +11,61 @@ export class ParseUtility {
     this.plugin = plugin;
   }
 
+  /** Parse natural language date using Obsidian's moment parser */
+  private parseNaturalDate(text: string): Date | undefined {
+    const parsed = window.moment(text, true);
+    return parsed.isValid() ? parsed.toDate() : undefined;
+  }
+
+  /** Gather tasks after pomodoro session */
   async gatherPostPomoTaskItems(workItem: WorkItem) {
-    let activeFileContent: string;
-    // ensure that post pomotaskitems are not reused.
-    if (workItem.postPomoTaskItems.length) {
-      workItem.postPomoTaskItems = new Array<PomoTaskItem>();
-    }
-    if (workItem.modifiedPomoTaskItems.length) {
-      workItem.modifiedPomoTaskItems = new Array<PomoTaskItem>();
-    }
-    await this.plugin.app.vault.read(workItem.activeNote).then((value) => {
-      activeFileContent = value;
-    });
-    activeFileContent.split("\n").forEach((value, index) => {
-      if (value.trim().startsWith("- [ ]")) {
-        workItem.postPomoTaskItems.push(
-          new PomoTaskItem(
-            value.replace("- [ ]", ""),
-            false,
-            workItem.activeNote.path
-          )
-        );
-      } else if (
-        value.trim().startsWith("- [x]") ||
-        value.trim().startsWith("- [X]")
+    const activeFileContent = await this.plugin.app.vault.read(
+      workItem.activeNote
+    );
+
+    // Reset arrays
+    workItem.postPomoTaskItems = [];
+    workItem.modifiedPomoTaskItems = [];
+
+    activeFileContent.split("\n").forEach((line) => {
+      const trimmed = line.trim();
+      if (
+        trimmed.startsWith("- [ ]") ||
+        trimmed.startsWith("- [x]") ||
+        trimmed.startsWith("- [X]")
       ) {
+        const isCompleted =
+          trimmed.startsWith("- [x]") || trimmed.startsWith("- [X]");
+        const rawText = trimmed.replace(/^-\s\[[ xX]\]\s*/, "");
+
         workItem.postPomoTaskItems.push(
-          new PomoTaskItem(
-            value.replace("- [x]", "").replace("- [X]", ""),
-            true,
-            workItem.activeNote.path
-          )
+          new PomoTaskItem(rawText, isCompleted, workItem.activeNote.path)
         );
       }
     });
-    workItem.postPomoTaskItems.forEach((value, index, array) => {
+
+    // Find modified tasks
+    workItem.postPomoTaskItems.forEach((task) => {
       if (
-        !workItem.initialPomoTaskItems.some((initialvalue) => {
-          return (
-            value.lineContent === initialvalue.lineContent &&
-            value.isCompleted === initialvalue.isCompleted
-          );
-        })
+        !workItem.initialPomoTaskItems.some(
+          (initial) =>
+            task.lineContent === initial.lineContent &&
+            task.isCompleted === initial.isCompleted
+        )
       ) {
-        workItem.modifiedPomoTaskItems.push(value);
+        workItem.modifiedPomoTaskItems.push(task);
       }
     });
   }
 
+  /** Gather all line items for the workbench */
   async gatherLineItems(
     newWorkItem: WorkItem,
-    pomoTaskItems: Array<PomoTaskItem>,
+    pomoTaskItems: PomoTaskItem[],
     isStore: boolean,
     activeFile: TFile
   ) {
-    let activeFileContent: string;
-    await this.plugin.app.vault.read(activeFile).then((value) => {
-      activeFileContent = value;
-    });
+    const activeFileContent = await this.plugin.app.vault.read(activeFile);
     this.processActiveFileContents(
       activeFileContent,
       pomoTaskItems,
@@ -76,15 +74,15 @@ export class ParseUtility {
     );
   }
 
+  /** Core task parsing */
   private processActiveFileContents(
     activeFileContent: string,
-    pomoTaskItems: Array<PomoTaskItem>,
+    pomoTaskItems: PomoTaskItem[],
     isStore: boolean,
     newWorkItem: WorkItem
   ) {
-    activeFileContent.split("\n").forEach((value) => {
-      const trimmed = value.trim();
-
+    activeFileContent.split("\n").forEach((line) => {
+      const trimmed = line.trim();
       if (
         trimmed.startsWith("- [ ]") ||
         trimmed.startsWith("- [x]") ||
@@ -92,16 +90,15 @@ export class ParseUtility {
       ) {
         const isCompleted =
           trimmed.startsWith("- [x]") || trimmed.startsWith("- [X]");
-
-        // Remove checkbox prefix
         const rawText = trimmed.replace(/^-\s\[[ xX]\]\s*/, "");
 
-        // ⏱ Parse duration (e.g. 1h30m, 45m)
+        // Parse duration if present
         const estimatedMs = parseDurationFromText(rawText);
 
-        // 📅 Parse Natural Language Date (optional)
+        // Parse natural language date (optional)
         const naturalLanguageDate = this.parseNaturalDate(rawText);
 
+        // Add task to list
         pomoTaskItems.push(
           new PomoTaskItem(
             rawText,
