@@ -25,11 +25,32 @@ export class TaskTimeboxManager {
   initialize() {
     this.workItem.initializeTaskRuntimes();
   }
+  private canStartTask(task: PomoTaskItem): { ok: boolean; reason?: string } {
+    if (task.isCompleted) {
+      return { ok: false, reason: "Task is already completed" };
+    }
+
+    if (task.estimatedMs === undefined || task.estimatedMs <= 0) {
+      return { ok: false, reason: "Task has no duration set" };
+    }
+
+    const runtime = this.runtimes.get(task);
+    if (!runtime) {
+      return { ok: false, reason: "Task runtime not initialized" };
+    }
+
+    return { ok: true };
+  }
 
   /** Start or resume a task timebox */
   startTask(task: PomoTaskItem) {
-    const runtime = this.runtimes.get(task);
-    if (!runtime || runtime.completed) return;
+    const check = this.canStartTask(task);
+    if (!check.ok) {
+      new Notice(check.reason);
+      return;
+    }
+
+    const runtime = this.runtimes.get(task)!;
 
     if (this.activeRuntime && this.activeRuntime !== runtime) {
       this.pauseActiveTask();
@@ -54,6 +75,12 @@ export class TaskTimeboxManager {
 
   /** Switch from the active task to another */
   switchTask(task: PomoTaskItem) {
+    const check = this.canStartTask(task);
+    if (!check.ok) {
+      new Notice(check.reason);
+      return;
+    }
+
     this.pauseActiveTask();
     this.startTask(task);
   }
@@ -76,7 +103,8 @@ export class TaskTimeboxManager {
     if (!this.activeRuntime) return;
 
     this.activeRuntime.remainingMs += extraMs;
-    this.activeRuntime.estimatedMs += extraMs;
+    this.activeRuntime.estimatedMs =
+      (this.activeRuntime.estimatedMs ?? 0) + extraMs;
   }
 
   /** Called periodically to check for expiration */
