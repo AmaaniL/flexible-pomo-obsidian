@@ -1,5 +1,3 @@
-import { undefined } from "./pomo_task_item";
-
 export class PomoTaskItem {
   lineContent: string;
   isCompleted: boolean;

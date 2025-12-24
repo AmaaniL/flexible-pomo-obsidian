@@ -129,30 +129,34 @@ export class TaskTimerPane {
         new ExpirationModal(
           this.app,
           runtime,
+          // onComplete
           async () => {
             runtime.completed = true;
             runtime.remainingMs = 0;
 
+            // Persist completion to markdown
             if (this.workItem) {
-              await new FilePersistence(this.app).updateWorkItemFile(
-                this.workItem
-              );
+              const persistence = new FilePersistence(this.app);
+              await persistence.updateWorkItemFile(this.workItem);
             }
 
+            // Update UI after persistence
             this.render();
           },
+          // onExtend
           async (extraMs: number) => {
             runtime.remainingMs += extraMs;
             runtime.startedAt = Date.now();
             runtime.paused = false;
-            this.notifiedTasks.delete(runtime);
+            this.notifiedTasks.delete(runtime); // allow future notification
 
+            // Persist updated duration
             if (this.workItem) {
-              await new FilePersistence(this.app).updateWorkItemFile(
-                this.workItem
-              );
+              const persistence = new FilePersistence(this.app);
+              await persistence.updateWorkItemFile(this.workItem);
             }
 
+            // Update UI after persistence
             this.render();
           }
         ).open();
