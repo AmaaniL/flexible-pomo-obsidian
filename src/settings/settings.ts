@@ -3,14 +3,15 @@ import {
   DropdownComponent,
   Notice,
   PluginSettingTab,
+  SearchComponent,
   Setting,
 } from "obsidian";
 import { appHasDailyNotesPluginLoaded } from "obsidian-daily-notes-interface";
-import { whiteNoiseUrl } from "./audio_urls";
-import FlexiblePomoTimerPlugin from "./main";
-import { WhiteNoise } from "./white_noise";
-import { FolderSuggest } from "./flexipomosuggesters/FolderSuggester";
-import { WorkbenchItemsListViewType } from "./workbench_data";
+import { whiteNoiseUrl } from "../audio_urls";
+import FlexiblePomoTimerPlugin from "../main";
+import { WhiteNoise } from "../white_noise";
+import { FolderSuggest } from "../suggesters/FolderSuggester";
+import { WorkbenchItemsListViewType } from "../workbench/workbench_data";
 
 export interface PomoSettings {
   pomo: number;
@@ -91,123 +92,111 @@ export class PomoSettingTab extends PluginSettingTab {
   }
 
   display(): void {
-    let { containerEl } = this;
+    const { containerEl } = this;
     containerEl.empty();
     containerEl.createEl("h2", { text: "Flexible Pomodoro Timer - Settings" });
 
-    /**************  Timer settings **************/
+    /************** Timer settings **************/
+    const createNumericSetting = (
+      name: string,
+      desc: string,
+      value: number,
+      defaultValue: number,
+      onChange: (val: number) => void
+    ) => {
+      new Setting(containerEl)
+        .setName(name)
+        .setDesc(desc)
+        .addText((text) =>
+          text
+            .setValue(value.toString())
+            .onChange((val) =>
+              onChange(setNumericValue(val, defaultValue, value))
+            )
+        );
+    };
 
-    new Setting(containerEl)
-      .setName("Pomodoro time (minutes)")
-      .setDesc("Leave blank for default")
-      .addText((text) =>
-        text
-          .setValue(this.plugin.settings.pomo.toString())
-          .onChange((value) => {
-            this.plugin.settings.pomo = setNumericValue(
-              value,
-              DEFAULT_SETTINGS.pomo,
-              this.plugin.settings.pomo
-            );
-            this.plugin.saveSettings();
-          })
-      );
+    createNumericSetting(
+      "Pomodoro time (minutes)",
+      "Leave blank for default",
+      this.plugin.settings.pomo,
+      DEFAULT_SETTINGS.pomo,
+      (val) => {
+        this.plugin.settings.pomo = val;
+        this.plugin.saveSettings();
+      }
+    );
 
-    new Setting(containerEl)
-      .setName("Short break time (minutes)")
-      .setDesc("Leave blank for default")
-      .addText((text) =>
-        text
-          .setValue(this.plugin.settings.shortBreak.toString())
-          .onChange((value) => {
-            this.plugin.settings.shortBreak = setNumericValue(
-              value,
-              DEFAULT_SETTINGS.shortBreak,
-              this.plugin.settings.shortBreak
-            );
-            this.plugin.saveSettings();
-          })
-      );
+    createNumericSetting(
+      "Short break time (minutes)",
+      "Leave blank for default",
+      this.plugin.settings.shortBreak,
+      DEFAULT_SETTINGS.shortBreak,
+      (val) => {
+        this.plugin.settings.shortBreak = val;
+        this.plugin.saveSettings();
+      }
+    );
 
-    new Setting(containerEl)
-      .setName("Long break time (minutes)")
-      .setDesc("Leave blank for default")
-      .addText((text) =>
-        text
-          .setValue(this.plugin.settings.longBreak.toString())
-          .onChange((value) => {
-            this.plugin.settings.longBreak = setNumericValue(
-              value,
-              DEFAULT_SETTINGS.longBreak,
-              this.plugin.settings.longBreak
-            );
-            this.plugin.saveSettings();
-          })
-      );
+    createNumericSetting(
+      "Long break time (minutes)",
+      "Leave blank for default",
+      this.plugin.settings.longBreak,
+      DEFAULT_SETTINGS.longBreak,
+      (val) => {
+        this.plugin.settings.longBreak = val;
+        this.plugin.saveSettings();
+      }
+    );
 
-    new Setting(containerEl)
-      .setName("Long break interval")
-      .setDesc("Number of pomos before a long break; leave blank for default")
-      .addText((text) =>
-        text
-          .setValue(this.plugin.settings.longBreakInterval.toString())
-          .onChange((value) => {
-            this.plugin.settings.longBreakInterval = setNumericValue(
-              value,
-              DEFAULT_SETTINGS.longBreakInterval,
-              this.plugin.settings.longBreakInterval
-            );
-            this.plugin.saveSettings();
-          })
-      );
+    createNumericSetting(
+      "Long break interval",
+      "Number of pomos before a long break; leave blank for default",
+      this.plugin.settings.longBreakInterval,
+      DEFAULT_SETTINGS.longBreakInterval,
+      (val) => {
+        this.plugin.settings.longBreakInterval = val;
+        this.plugin.saveSettings();
+      }
+    );
 
     new Setting(containerEl)
       .setName("Sidebar icon")
       .setDesc(
-        "Toggle left sidebar icon. Restart Obsidian for the change to take effect"
+        "Toggle left sidebar icon. Restart Obsidian for change to take effect"
       )
       .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.ribbonIcon).onChange((value) => {
-          this.plugin.settings.ribbonIcon = value;
+        toggle.setValue(this.plugin.settings.ribbonIcon).onChange((val) => {
+          this.plugin.settings.ribbonIcon = val;
           this.plugin.saveSettings();
         })
       );
 
     new Setting(containerEl)
       .setName("Autostart timer")
-      .setDesc(
-        "Start each pomodoro and break automatically. When off, click the sidebar icon on the left or use the toggle pause command to start the next timer"
-      )
+      .setDesc("Start each pomodoro and break automatically.")
       .addToggle((toggle) =>
-        toggle
-          .setValue(this.plugin.settings.autostartTimer)
-          .onChange((value) => {
-            this.plugin.settings.autostartTimer = value;
-            this.plugin.saveSettings();
-            this.display(); //force refresh
-          })
+        toggle.setValue(this.plugin.settings.autostartTimer).onChange((val) => {
+          this.plugin.settings.autostartTimer = val;
+          this.plugin.saveSettings();
+          this.display(); // force refresh for dependent settings
+        })
       );
 
-    if (this.plugin.settings.autostartTimer === false) {
-      new Setting(containerEl)
-        .setName("Cycles before pause")
-        .setDesc(
-          "Number of pomodoro + break cycles to run automatically before stopping. Default is 0 (stops after every pomodoro and every break)"
-        )
-        .addText((text) =>
-          text
-            .setValue(this.plugin.settings.numAutoCycles.toString())
-            .onChange((value) => {
-              this.plugin.settings.numAutoCycles = setNumericValue(
-                value,
-                DEFAULT_SETTINGS.numAutoCycles,
-                this.plugin.settings.numAutoCycles
-              );
-              this.plugin.timer.cyclesSinceLastAutoStop = 0;
-              this.plugin.saveSettings();
-            })
-        );
+    if (!this.plugin.settings.autostartTimer) {
+      createNumericSetting(
+        "Cycles before pause",
+        "Number of pomodoro + break cycles to run automatically before stopping",
+        this.plugin.settings.numAutoCycles,
+        DEFAULT_SETTINGS.numAutoCycles,
+        (val) => {
+          this.plugin.settings.numAutoCycles = val;
+          this.plugin.timer.cyclesSinceLastAutoStop = 0;
+          this.plugin.saveSettings();
+        }
+      );
     }
+
     containerEl.createEl("h3", { text: "Task Timeboxing" });
 
     new Setting(containerEl)
@@ -218,8 +207,8 @@ export class PomoSettingTab extends PluginSettingTab {
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.showTaskFinishTime)
-          .onChange(async (value) => {
-            this.plugin.settings.showTaskFinishTime = value;
+          .onChange(async (val) => {
+            this.plugin.settings.showTaskFinishTime = val;
             await this.plugin.saveSettings();
           })
       );
@@ -230,8 +219,8 @@ export class PomoSettingTab extends PluginSettingTab {
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.autoCompleteOnExpire)
-          .onChange(async (value) => {
-            this.plugin.settings.autoCompleteOnExpire = value;
+          .onChange(async (val) => {
+            this.plugin.settings.autoCompleteOnExpire = val;
             await this.plugin.saveSettings();
           })
       );
@@ -242,22 +231,21 @@ export class PomoSettingTab extends PluginSettingTab {
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.highlightActiveTask)
-          .onChange(async (value) => {
-            this.plugin.settings.highlightActiveTask = value;
+          .onChange(async (val) => {
+            this.plugin.settings.highlightActiveTask = val;
             await this.plugin.saveSettings();
           })
       );
 
-    /**************  Sound settings **************/
-
+    /************** Sound settings **************/
     new Setting(containerEl)
       .setName("Notification sound")
       .setDesc("Play notification sound at the end of each pomodoro and break")
       .addToggle((toggle) =>
         toggle
           .setValue(this.plugin.settings.notificationSound)
-          .onChange((value) => {
-            this.plugin.settings.notificationSound = value;
+          .onChange((val) => {
+            this.plugin.settings.notificationSound = val;
             this.plugin.saveSettings();
           })
       );
@@ -266,18 +254,17 @@ export class PomoSettingTab extends PluginSettingTab {
       .setName("White noise")
       .setDesc("Play white noise while timer is active")
       .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.whiteNoise).onChange((value) => {
-          this.plugin.settings.whiteNoise = value;
+        toggle.setValue(this.plugin.settings.whiteNoise).onChange((val) => {
+          this.plugin.settings.whiteNoise = val;
           this.plugin.saveSettings();
 
-          if (this.plugin.settings.whiteNoise === true) {
+          if (val) {
             this.plugin.timer.whiteNoisePlayer = new WhiteNoise(
               this.plugin,
               whiteNoiseUrl
             );
             this.plugin.timer.whiteNoisePlayer.whiteNoise();
           } else {
-            //if false, turn it off immediately
             this.plugin.timer.whiteNoisePlayer.stopWhiteNoise();
           }
 
@@ -285,86 +272,77 @@ export class PomoSettingTab extends PluginSettingTab {
         })
       );
 
+    // ------------------ Workbench folder ------------------
     new Setting(this.containerEl)
       .setName("Workbench Folder location")
       .setDesc("Files in this folder will be available as workbenches.")
-      .addSearch((cb) => {
-        new FolderSuggest(this.app, cb.inputEl);
+      .addSearch((cb: SearchComponent) => {
+        new FolderSuggest(this.app, cb.inputEl); // attach folder suggester
         cb.setPlaceholder("Example: folder1/folder2")
           .setValue(this.plugin.settings.templates_folder)
-          .onChange((new_folder) => {
+          .onChange((new_folder: string) => {
             this.plugin.settings.templates_folder = new_folder;
             this.plugin.saveSettings();
           });
-        // @ts-ignore
-        cb.containerEl.addClass("flexible-pomo-search");
-      });
+      })
+      // Add class to the Setting container, not the SearchComponent
+      .settingEl.addClass("flexible-pomo-search");
 
-    new Setting(this.containerEl)
+    // ------------------ Workbench position ------------------
+    new Setting(containerEl)
       .setName("Workbench Position")
-      .setDesc("Workbench Position in Workspace.")
-      .addDropdown((component) => {
-        component
+      .setDesc("Workbench Position in Workspace")
+      .addDropdown((dropdown) => {
+        dropdown
           .addOption("left", "Left")
           .addOption("right", "Right")
-          .onChange((value) => {
-            let oldValue: string = this.plugin.settings.workbench_location;
-            this.plugin.settings.workbench_location = value;
-            if (value !== oldValue) {
-              if (this.plugin.pomoWorkBench.view) {
-                this.app.workspace.detachLeavesOfType(
-                  WorkbenchItemsListViewType
-                );
-                this.plugin.pomoWorkBench.initView();
-              }
+          .setValue(this.plugin.settings.workbench_location)
+          .onChange((val) => {
+            const oldValue = this.plugin.settings.workbench_location;
+            this.plugin.settings.workbench_location = val;
+            this.plugin.saveSettings();
+            if (val !== oldValue && this.plugin.pomoWorkBench.view) {
+              this.app.workspace.detachLeavesOfType(WorkbenchItemsListViewType);
+              this.plugin.pomoWorkBench.initView();
             }
-          })
-          .setValue(this.plugin.settings.workbench_location);
+          });
       });
 
-    /**************  Logging settings **************/
+    /************** Logging settings **************/
     new Setting(containerEl)
       .setName("Logging")
       .setDesc("Enable a log of completed pomodoros")
       .addToggle((toggle) =>
-        toggle.setValue(this.plugin.settings.logging).onChange((value) => {
-          this.plugin.settings.logging = value;
-
-          if (value === true) {
-            this.plugin.openLogFileOnClick();
-          } else {
-            this.plugin.statusBar.removeClass("statusbar-pomo-logging");
-          }
-
+        toggle.setValue(this.plugin.settings.logging).onChange((val) => {
+          this.plugin.settings.logging = val;
           this.plugin.saveSettings();
-          this.display(); //force refresh
+          if (val) this.plugin.openLogFileOnClick();
+          else this.plugin.statusBar.removeClass("statusbar-pomo-logging");
+          this.display();
         })
       );
 
-    //various logging settings; only show if logging is enabled (currently does not autohide, only)
-    if (this.plugin.settings.logging === true) {
+    if (this.plugin.settings.logging) {
       new Setting(containerEl)
         .setName("Log file")
-        .setDesc("If file doesn't already exist, it will be created")
+        .setDesc("If file doesn't exist, it will be created")
         .addText((text) =>
-          text
-            .setValue(this.plugin.settings.logFile.toString())
-            .onChange((value) => {
-              this.plugin.settings.logFile = value;
-              this.plugin.saveSettings();
-            })
+          text.setValue(this.plugin.settings.logFile).onChange((val) => {
+            this.plugin.settings.logFile = val;
+            this.plugin.saveSettings();
+          })
         );
 
       new Setting(containerEl)
         .setName("Log to daily note")
         .setDesc("Logs to the end of today's daily note")
         .addToggle((toggle) =>
-          toggle.setValue(this.plugin.settings.logToDaily).onChange((value) => {
-            if (appHasDailyNotesPluginLoaded() === true) {
-              this.plugin.settings.logToDaily = value;
-            } else if (value === true) {
-              this.plugin.settings.logToDaily = false;
+          toggle.setValue(this.plugin.settings.logToDaily).onChange((val) => {
+            if (val && !appHasDailyNotesPluginLoaded()) {
               new Notice("Please enable daily notes plugin");
+              this.plugin.settings.logToDaily = false;
+            } else {
+              this.plugin.settings.logToDaily = val;
             }
             this.plugin.saveSettings();
           })
@@ -376,8 +354,8 @@ export class PomoSettingTab extends PluginSettingTab {
         .addMomentFormat((text) =>
           text
             .setDefaultFormat(this.plugin.settings.logText)
-            .onChange((value) => {
-              this.plugin.settings.logText = value;
+            .onChange((val) => {
+              this.plugin.settings.logText = val;
               this.plugin.saveSettings();
             })
         );
@@ -385,73 +363,73 @@ export class PomoSettingTab extends PluginSettingTab {
       new Setting(containerEl)
         .setName("Log active note")
         .setDesc(
-          "In log, append link pointing to the note that was active when you started the pomodoro"
+          "Append link pointing to the note active when pomodoro started"
         )
         .addToggle((toggle) =>
           toggle
             .setValue(this.plugin.settings.logActiveNote)
-            .onChange((value) => {
-              this.plugin.settings.logActiveNote = value;
+            .onChange((val) => {
+              this.plugin.settings.logActiveNote = val;
               this.plugin.saveSettings();
             })
         );
 
       new Setting(containerEl)
         .setName("Log pomodoro duration")
-        .setDesc("Log pomodoro duration in minutes in your active log file.")
+        .setDesc("Log pomodoro duration in minutes")
         .addToggle((toggle) =>
           toggle
             .setValue(this.plugin.settings.logPomodoroDuration)
-            .onChange((value) => {
-              this.plugin.settings.logPomodoroDuration = value;
+            .onChange((val) => {
+              this.plugin.settings.logPomodoroDuration = val;
               this.plugin.saveSettings();
             })
         );
 
       new Setting(containerEl)
         .setName("Log completed tasks of Active Note")
-        .setDesc("Log completed tasks of Active Note.")
+        .setDesc("Log completed tasks of Active Note")
         .addToggle((toggle) =>
           toggle
             .setValue(this.plugin.settings.logPomodoroTasks)
-            .onChange((value) => {
-              this.plugin.settings.logPomodoroTasks = value;
+            .onChange((val) => {
+              this.plugin.settings.logPomodoroTasks = val;
               this.plugin.saveSettings();
             })
         );
 
       new Setting(containerEl)
         .setName("Show active note in status bar")
-        .setDesc(
-          "In the status bar, show active note that pomodor was started in."
-        )
+        .setDesc("Show active note that pomodoro was started in")
         .addToggle((toggle) =>
           toggle
             .setValue(this.plugin.settings.showActiveNoteInTimer)
-            .onChange((value) => {
-              this.plugin.settings.showActiveNoteInTimer = value;
+            .onChange((val) => {
+              this.plugin.settings.showActiveNoteInTimer = val;
               this.plugin.saveSettings();
             })
         );
+
       new Setting(containerEl)
         .setName("Allow extended Pomodoro")
         .setDesc("Allow Extended Pomodoro")
         .addToggle((toggle) =>
           toggle
             .setValue(this.plugin.settings.allowExtendedPomodoro)
-            .onChange((value) => {
-              this.plugin.settings.allowExtendedPomodoro = value;
+            .onChange((val) => {
+              this.plugin.settings.allowExtendedPomodoro = val;
               this.plugin.saveSettings();
             })
         );
+
       new Setting(containerEl)
         .setName("Allow Popup Indicator")
         .setDesc("Allow Popup Pomodoro Indicator")
         .addToggle((toggle) =>
           toggle
             .setValue(this.plugin.settings.betterIndicator)
-            .onChange((value) => {
-              this.plugin.settings.betterIndicator = value;
+            .onChange((val) => {
+              this.plugin.settings.betterIndicator = val;
               this.plugin.saveSettings();
             })
         );

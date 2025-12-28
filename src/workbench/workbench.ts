@@ -1,6 +1,6 @@
 import { TFile, WorkspaceLeaf } from "obsidian";
 
-import FlexiblePomoTimerPlugin from "./main";
+import FlexiblePomoTimerPlugin from "../main";
 import { WorkbenchItemsListView } from "./workbench_view";
 import {
   DEFAULT_DATA,
@@ -9,11 +9,12 @@ import {
   WorkbenchItemsListViewType,
   WorkbenchFilesData,
 } from "./workbench_data";
-import { WorkItem } from "./workitem";
-import { PomoTaskItem } from "./PomoTaskItem";
-import { Mode } from "./timer";
-import { CurrentProgressModal } from "./current_progress_modal";
-import { TaskTimerPane } from "./task_timer_pane";
+import { WorkItem } from "../workbench/workitem";
+import { PomoTaskItem } from "../PomoTaskItem";
+import { Mode } from "../timer";
+import { CurrentProgressModal } from "../current_progress_modal";
+import { TaskTimerPane } from "../task_timer_pane";
+import { ItemView } from "obsidian";
 
 export default class FlexiblePomoWorkbench {
   public data: WorkbenchFilesData;
@@ -128,9 +129,10 @@ export default class FlexiblePomoWorkbench {
     if (this.taskTimerPane) this.taskTimerPane.destroy();
 
     // Create Task Timer Pane
+    const itemView = leaf.view as ItemView; // cast to ItemView so TS knows contentEl exists
     this.taskTimerPane = new TaskTimerPane(
       this.plugin,
-      leaf,
+      itemView.contentEl,
       this.workItems[0] || null
     );
   };

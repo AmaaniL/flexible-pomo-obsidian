@@ -1,5 +1,5 @@
 import { App, WorkspaceLeaf } from "obsidian";
-import { WorkItem } from "./workitem";
+import { WorkItem } from "./workbench/workitem";
 import { TaskRuntime } from "./task_runtime";
 import { ExpirationModal } from "./expiration_modal";
 import { FilePersistence } from "./file_persistence";
@@ -17,15 +17,14 @@ export class TaskTimerPane {
 
   constructor(
     plugin: FlexiblePomoTimerPlugin,
-    leaf: WorkspaceLeaf,
+    parentEl: HTMLElement,
     workItem: WorkItem | null = null
   ) {
     this.plugin = plugin;
     this.app = plugin.app;
-    this.leaf = leaf;
     this.workItem = workItem;
 
-    this.container = leaf.view.containerEl.createDiv({
+    this.container = parentEl.createDiv({
       cls: "task-timer-pane",
     });
 

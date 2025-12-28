@@ -8,36 +8,45 @@ import {
   TFolder,
 } from "obsidian";
 import { get_tfiles_from_folder } from "src/flexipomosuggesters/Utils";
-import { errorWrapperSync } from "./errorWrapper";
+import { errorWrapperSync } from "../flexipomosuggesters/errorWrapper";
 import { log_error } from "src/flexipomosuggesters/Log";
 import FlexiblePomoTimerPlugin from "../main";
-import { AppHelper } from "./app-helper";
-import { WorkItem } from "../workbench/workitem";
+import { AppHelper } from "../flexipomosuggesters/app-helper";
 import { FileUtility } from "../file_utility";
-import { FilePath } from "../workbench/workbench_data";
 
 export enum OpenMode {
   InsertTemplate,
   CreateNoteTemplate,
 }
 
-export class LoadingSuggester extends FuzzySuggestModal<TFile> {
+export class SavingSuggester extends FuzzySuggestModal<TFile> {
   public app: App;
   private plugin: FlexiblePomoTimerPlugin;
   private open_mode: OpenMode;
   private creation_folder: TFolder;
   private searchQuery: string;
   private appHelper: AppHelper;
-  private fileUtility: FileUtility;
 
   constructor(plugin: FlexiblePomoTimerPlugin) {
     super(plugin.app);
     this.app = plugin.app;
     this.plugin = plugin;
-    this.fileUtility = plugin.fileUtility;
     this.appHelper = new AppHelper(this.app);
-    this.setPlaceholder("Enter name of workbench...");
-    this.setInstructions([{ command: "[esc]", purpose: "dismiss" }]);
+    this.setPlaceholder("Type name of a workbench...");
+    this.setInstructions([
+      { command: "[shift ↵]", purpose: "create" },
+      { command: "[esc]", purpose: "dismiss" },
+    ]);
+    this.scope.register(["Shift"], "Enter", () => {
+      if (this.searchQuery) {
+        this.plugin.fileUtility.handleCreateNew(
+          this.appHelper,
+          this.searchQuery,
+          false
+        );
+        this.close();
+      }
+    });
   }
 
   getSuggestions(query: string): FuzzyMatch<TFile>[] {
@@ -65,10 +74,21 @@ export class LoadingSuggester extends FuzzySuggestModal<TFile> {
   }
 
   onChooseItem(item: TFile): void {
-    if (item && item.path) {
-      this.plugin.pomoWorkBench.data.workbenchFiles = new Array<FilePath>();
-      this.plugin.pomoWorkBench.modified = false;
-      this.plugin.fileUtility.loadItems(item.path, item.basename);
+    switch (this.open_mode) {
+      case OpenMode.InsertTemplate:
+        this.plugin.settings.active_workbench_path = item.path;
+        this.plugin.settings.active_workbench = item.basename;
+        this.plugin.saveSettings();
+        this.plugin.fileUtility.handleAppend(item);
+        this.close();
+        //this.plugin.templater.append_template_to_active_file(item);
+        break;
+      case OpenMode.CreateNoteTemplate:
+        //this.plugin.templater.create_new_note_from_template(
+        //   item,
+        //  this.creation_folder
+        //);
+        break;
     }
   }
 

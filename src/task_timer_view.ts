@@ -22,9 +22,13 @@ export class TaskTimerView extends ItemView {
   }
 
   async onOpen() {
+    this.contentEl.empty();
+
     const workItem = this.plugin.pomoWorkBench?.workItems?.[0] ?? null;
 
-    this.pane = new TaskTimerPane(this.plugin, this.leaf, workItem);
+    this.pane = new TaskTimerPane(this.plugin, this.contentEl, workItem);
+
+    this.pane.render();
   }
 
   async onClose() {

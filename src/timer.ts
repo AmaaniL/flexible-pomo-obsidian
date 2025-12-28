@@ -8,11 +8,11 @@ import {
 import moment, { Moment } from "moment";
 import { notificationUrl, whiteNoiseUrl } from "./audio_urls";
 import { WhiteNoise } from "./white_noise";
-import { PomoSettings } from "./settings";
+import { PomoSettings } from "./settings/settings";
 import FlexiblePomoTimerPlugin from "./main";
 import { confirmWithModal } from "./extend_modal";
 import { PomoTaskItem } from "./PomoTaskItem";
-import { WorkItem } from "./workitem";
+import { WorkItem } from "./workbench/workitem";
 
 const MILLISECS_IN_MINUTE = 60 * 1000;
 const electron = require("electron");
@@ -107,7 +107,7 @@ export class Timer {
               return millisecsToString(this.pausedTime); //just show the paused time
             }
           } else if (moment().isSameOrAfter(this.endTime.toDate())) {
-          /*if reaching the end of the current timer, end of current timer*/
+            /*if reaching the end of the current timer, end of current timer*/
             if (!this.triggered && this.isPomo()) {
               await this.handleTimerEnd();
             } else {

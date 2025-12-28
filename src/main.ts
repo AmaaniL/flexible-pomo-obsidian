@@ -9,21 +9,25 @@ import {
   moment,
 } from "obsidian";
 import * as feather from "feather-icons";
-import { DEFAULT_SETTINGS, PomoSettings, PomoSettingTab } from "./settings";
+import {
+  DEFAULT_SETTINGS,
+  PomoSettings,
+  PomoSettingTab,
+} from "./settings/settings";
 import { getDailyNoteFile, Mode, Timer } from "./timer";
-import FlexiblePomoWorkbench from "./workbench";
+import FlexiblePomoWorkbench from "./workbench/workbench";
 import {
   DEFAULT_DATA,
   FilePath,
   WorkbenchItemsListViewType,
-} from "./workbench_data";
+} from "./workbench/workbench_data";
 import { ParseUtility } from "./parse_utility";
-import { WorkItem } from "./workitem";
-import { WorkbenchItemsListView } from "./workbench_view";
-import { SavingSuggester } from "./flexipomosuggesters/SavingSuggester";
+import { WorkItem } from "./workbench/workitem";
+import { WorkbenchItemsListView } from "./workbench/workbench_view";
+import { SavingSuggester } from "./suggesters/SavingSuggester";
 import { LoadingSuggester } from "./flexipomosuggesters/LoadingSuggester";
 import { FileUtility } from "./file_utility";
-import { askCustomTimeModal } from "./custom_time_modal";
+import { askCustomTimeModal } from "./ui/custom_time_modal";
 import { TASK_TIMER_VIEW_TYPE, TaskTimerView } from "./task_timer_view";
 
 export default class FlexiblePomoTimerPlugin extends Plugin {

@@ -1,5 +1,5 @@
 import { App, TFile } from "obsidian";
-import { WorkItem } from "./workitem";
+import { WorkItem } from "./workbench/workitem";
 import { PomoTaskItem } from "./pomo_task_item";
 
 export class FilePersistence {

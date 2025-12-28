@@ -1,4 +1,4 @@
-import { WorkItem } from "./workitem";
+import { WorkItem } from "./workbench/workitem";
 import { TaskRuntime } from "./task_runtime";
 import { PomoTaskItem } from "./PomoTaskItem";
 import { Timer } from "./timer";
