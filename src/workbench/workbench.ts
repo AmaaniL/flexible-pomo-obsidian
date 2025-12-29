@@ -88,86 +88,95 @@ export default class FlexiblePomoWorkbench {
     };
     return !patterns.some(fileMatchesRegex);
   };
-
   public addWorkbenchItem(newWorkItem: WorkItem) {
-    let isExisting: boolean = false;
-    for (const workbenchItem of this.workItems) {
-      if (newWorkItem.activeNote.path === workbenchItem.activeNote.path) {
-        isExisting = true;
-        workbenchItem.isStartedActiveNote = true;
-      }
-    }
-    if (!isExisting) {
+    const existing = this.workItems.find(
+      (wi) => wi.activeNote.path === newWorkItem.activeNote.path
+    );
+    if (existing) {
+      existing.isStartedActiveNote = true;
+    } else {
       this.workItems.push(newWorkItem);
     }
-  }
 
-  public initView = async (): Promise<void> => {
-    let leaf: WorkspaceLeaf = null;
-    for (leaf of this.plugin.app.workspace.getLeavesOfType(
+    // Update the TaskTimerPane with the first active WorkItem
+    if (this.taskTimerPane) {
+      this.taskTimerPane.setWorkItem(this.workItems[0] || null);
+    }
+  }
+  public async initView(): Promise<void> {
+    let leaf: WorkspaceLeaf | null = null;
+
+    // Use an existing leaf if available
+    for (const l of this.plugin.app.workspace.getLeavesOfType(
       WorkbenchItemsListViewType
     )) {
-      if (leaf.view instanceof WorkbenchItemsListView) return;
+      if (l.view instanceof WorkbenchItemsListView) return;
+      leaf = l;
       break;
     }
 
-    if (this.plugin.settings.workbench_location === "left") {
-      leaf = leaf ?? this.plugin.app.workspace.getLeftLeaf(false);
-    } else {
-      leaf = leaf ?? this.plugin.app.workspace.getRightLeaf(false);
+    // Otherwise get a leaf on left or right based on settings
+    if (!leaf) {
+      leaf =
+        this.plugin.settings.workbench_location === "left"
+          ? this.plugin.app.workspace.getLeftLeaf(false)
+          : this.plugin.app.workspace.getRightLeaf(false);
     }
 
     await leaf.setViewState({
       type: WorkbenchItemsListViewType,
       active: true,
     });
-
-    // Wait for the view to attach
     await this.plugin.app.workspace.revealLeaf(leaf);
 
     // Destroy old pane if exists
     if (this.taskTimerPane) this.taskTimerPane.destroy();
 
-    // Create Task Timer Pane
-    const itemView = leaf.view as ItemView; // cast to ItemView so TS knows contentEl exists
+    // Create TaskTimerPane with null initially
+    const itemView = leaf.view as ItemView;
     this.taskTimerPane = new TaskTimerPane(
       this.plugin,
       itemView.contentEl,
-      this.workItems[0] || null
+      null
     );
-  };
 
-  linkFile = async (
+    // If any workItems exist, update pane
+    if (this.workItems.length > 0) {
+      this.taskTimerPane.setWorkItem(this.workItems[0]);
+    }
+  }
+
+  public async linkFile(
     openedFile: TFile,
     initialWorkItems: PomoTaskItem[]
-  ): Promise<void> => {
-    let existingFile: boolean = false;
-    for (const workBenchFile of this.data.workbenchFiles) {
-      if (workBenchFile.path === openedFile.path) {
-        existingFile = true;
-      }
+  ): Promise<void> {
+    // Skip if already exists
+    const existsInWorkbench = this.workItems.some(
+      (wi) => wi.activeNote.path === openedFile.path
+    );
+    if (existsInWorkbench) return;
+
+    // Create new WorkItem
+    const newWorkItem = new WorkItem(openedFile, false);
+
+    // Gather initial lines/tasks
+    await this.plugin.parseUtility.gatherLineItems(
+      newWorkItem,
+      newWorkItem.initialPomoTaskItems,
+      true,
+      openedFile
+    );
+
+    if (initialWorkItems) {
+      newWorkItem.initialPomoTaskItems = initialWorkItems;
     }
-    if (!existingFile) {
-      await this.view.update(openedFile);
-    }
-    for (const currentItem of this.workItems) {
-      if (currentItem.activeNote.path === openedFile.path) {
-        return;
-      }
-    }
-    if (this.isActive()) {
-      let newWorkItem = new WorkItem(this.plugin.getCurrentFile(), false);
-      await this.plugin.parseUtility.gatherLineItems(
-        newWorkItem,
-        newWorkItem.initialPomoTaskItems,
-        true,
-        this.plugin.getCurrentFile()
-      );
-      if (initialWorkItems) {
-        newWorkItem.initialPomoTaskItems = initialWorkItems;
-      }
-    }
-  };
+
+    // Add to workbench and update pane
+    this.addWorkbenchItem(newWorkItem);
+
+    // Redraw view
+    this.redraw();
+  }
 
   private isActive() {
     return (
@@ -176,39 +185,28 @@ export default class FlexiblePomoWorkbench {
     );
   }
 
-  clearWorkBench() {
-    if (this.isActive()) {
-      if (this.workItems.length) {
-        this.workItems = this.workItems.filter((value) => {
-          if (value.isStartedActiveNote === false) {
-            return false;
-          } else {
-            return true;
-          }
-        });
-      }
-      if (this.data && this.data.workbenchFiles.length > 1) {
-        this.data.workbenchFiles = this.data.workbenchFiles.filter((value) => {
-          if (
-            this.plugin.timer.workItem &&
-            this.plugin.timer.workItem.activeNote
-          ) {
-            if (value.path !== this.plugin.timer.workItem.activeNote.path) {
-              return false;
-            } else {
-              return true;
-            }
-          } else {
-            return false;
-          }
-        });
-        this.redraw();
-      }
+  public clearWorkBench() {
+    if (this.plugin.timer.isPomo() && this.plugin.timer.workItem) {
+      // Keep only the active workItem
+      const activePath = this.plugin.timer.workItem.activeNote.path;
+      this.workItems = this.workItems.filter(
+        (wi) => wi.activeNote.path === activePath
+      );
+      this.data.workbenchFiles = this.data.workbenchFiles.filter(
+        (wf) => wf.path === activePath
+      );
     } else {
-      this.workItems = new Array<WorkItem>();
-      this.data.workbenchFiles = new Array<FilePath>();
-      this.redraw();
+      // Clear everything
+      this.workItems = [];
+      this.data.workbenchFiles = [];
     }
+
+    // Update pane
+    if (this.taskTimerPane) {
+      this.taskTimerPane.setWorkItem(this.workItems[0] || null);
+    }
+
+    this.redraw();
   }
 
   shiftPositionDatafile(isMoveUp: boolean) {

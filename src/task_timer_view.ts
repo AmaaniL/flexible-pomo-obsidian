@@ -1,6 +1,7 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import FlexiblePomoTimerPlugin from "./main";
 import { TaskTimerPane } from "./task_timer_pane";
+import { WorkItem } from "./workbench/workitem";
 
 export const TASK_TIMER_VIEW_TYPE = "flexible-pomo-task-timer";
 
@@ -22,13 +23,9 @@ export class TaskTimerView extends ItemView {
   }
 
   async onOpen() {
-    this.contentEl.empty();
+    this.pane = new TaskTimerPane(this.plugin, this.contentEl, null);
 
-    const workItem = this.plugin.pomoWorkBench?.workItems?.[0] ?? null;
-
-    this.pane = new TaskTimerPane(this.plugin, this.contentEl, workItem);
-
-    this.pane.render();
+    this.plugin.updateTaskTimerPane();
   }
 
   async onClose() {
@@ -36,7 +33,7 @@ export class TaskTimerView extends ItemView {
     this.pane = null;
   }
 
-  setWorkItem(workItem: any) {
+  setWorkItem(workItem: WorkItem | null) {
     this.pane?.setWorkItem(workItem);
   }
 }

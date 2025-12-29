@@ -664,19 +664,20 @@ export default class FlexiblePomoTimerPlugin extends Plugin {
       WorkbenchItemsListViewType
     );
   }
-  private updateTaskTimerPane() {
+  public updateTaskTimerPane() {
     const leaves = this.app.workspace.getLeavesOfType(TASK_TIMER_VIEW_TYPE);
-
     if (!leaves.length) return;
 
-    const activeFile = this.getCurrentFile();
-    const activeWorkItem =
-      this.pomoWorkBench.workItems.find(
-        (w) => w.activeNote.path === activeFile?.path
-      ) ?? null;
+    // ✅ source of truth
+    const activeWorkItem = this.timer?.workItem ?? null;
 
     for (const leaf of leaves) {
-      const view = leaf.view as TaskTimerView;
+      const view = leaf.view;
+
+      if (!(view instanceof TaskTimerView)) {
+        continue;
+      }
+
       view.setWorkItem(activeWorkItem);
     }
   }

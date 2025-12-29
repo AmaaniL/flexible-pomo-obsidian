@@ -31,9 +31,14 @@ export class TaskTimerPane {
     this.interval = window.setInterval(() => this.render(), 1000);
   }
 
+  /* ------------------------------ lifecycle ------------------------------ */
+
   public setWorkItem(workItem: WorkItem | null) {
     this.workItem = workItem;
+
+    // ✅ Correct: reset expiration state when switching notes
     this.notifiedTasks.clear();
+
     this.render();
   }
 
@@ -55,13 +60,15 @@ export class TaskTimerPane {
   private autoComplete(runtime: TaskRuntime) {
     runtime.completed = true;
     runtime.remainingMs = 0;
+
+    // ✅ mark as handled so it doesn't fire again
     this.notifiedTasks.add(runtime);
 
-    // fire-and-forget persistence
     void this.persist();
   }
 
   private openExpirationModal(runtime: TaskRuntime) {
+    // ✅ mark immediately to prevent modal spam
     this.notifiedTasks.add(runtime);
 
     new ExpirationModal(
@@ -77,7 +84,10 @@ export class TaskTimerPane {
         runtime.remainingMs += extraMs;
         runtime.startedAt = Date.now();
         runtime.paused = false;
+
+        // allow re-expiration after extension
         this.notifiedTasks.delete(runtime);
+
         await this.persist();
         this.render();
       }
@@ -124,8 +134,8 @@ export class TaskTimerPane {
       }
 
       /* ---------- totals ---------- */
-
-      if (hasDuration && !runtime.completed) {
+      // ✅ FIX: paused tasks should NOT affect finish-time math
+      if (hasDuration && !runtime.completed && !runtime.paused) {
         cumulativeMs += remainingMs;
         totalRemainingMs += remainingMs;
       }
@@ -164,7 +174,7 @@ export class TaskTimerPane {
       taskEl.setText(text);
 
       /* ---------- expiration ---------- */
-
+      // ✅ FIX: expiration fires once per runtime
       if (
         hasDuration &&
         !runtime.completed &&

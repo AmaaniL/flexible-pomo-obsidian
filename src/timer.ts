@@ -273,7 +273,7 @@ export class Timer {
     );
   }
 
-  private isPomo() {
+  public isPomo() {
     return this.mode === Mode.Pomo || this.mode === Mode.PomoCustom;
   }
 
@@ -358,95 +358,36 @@ export class Timer {
   startTimer(mode: Mode) {
     this.mode = mode;
     this.paused = false;
-    this.workItem = new WorkItem(this.plugin.getCurrentFile(), true);
-    if (this.isActive(mode)) {
-      if (this.settings.logActiveNote === true) {
-        const activeView = this.plugin.getCurrentFile();
-        if (activeView) {
-          this.workItem.activeNote = activeView;
-          if (this.plugin.pomoWorkBench.workItems.length) {
-            for (const workItem of this.plugin.pomoWorkBench.workItems) {
-              workItem.isStartedActiveNote = false;
-            }
-          }
-          // reinitialize workbench items initial pomo tasks.
-          this.plugin.pomoWorkBench.workItems = new Array<WorkItem>();
-          this.plugin.pomoWorkBench.addWorkbenchItem(this.workItem);
-          for (const workBenchFile of this.plugin.pomoWorkBench.data
-            .workbenchFiles) {
-            const tFile: TFile = this.plugin.app.vault.getAbstractFileByPath(
-              workBenchFile.path
-            ) as TFile;
-            let workItem: WorkItem = new WorkItem(
-              tFile,
-              workBenchFile.path === this.workItem.activeNote.path
-                ? true
-                : false
-            );
-            this.plugin.parseUtility.gatherLineItems(
-              workItem,
-              workItem.initialPomoTaskItems,
-              true,
-              workItem.activeNote
-            );
-          }
-          this.plugin.pomoWorkBench.view.update(this.workItem.activeNote);
-        }
-        if (this.settings.logPomodoroTasks === true) {
-          //reset the pomo holders.
-          if (this.workItem) {
-            this.clearPomoTasks();
-            this.plugin.parseUtility.gatherLineItems(
-              this.workItem,
-              this.workItem.initialPomoTaskItems,
-              false,
-              this.plugin.getCurrentFile()
-            );
-          }
-        }
-      }
-    } else {
-      if (this.settings.active_workbench_path) {
-        this.plugin.pomoWorkBench.modified = false;
-        this.plugin.pomoWorkBench.redraw();
-        this.plugin.fileUtility.handleAppend(
-          this.plugin.app.vault.getAbstractFileByPath(
-            this.settings.active_workbench_path
-          ) as TFile
-        );
-      }
-      //clear workbench items.
-      this.plugin.pomoWorkBench.workItems = new Array<WorkItem>();
-      this.closeTimerIndicator();
-      this.clearPomoTasks();
-      this.clearActiveNote();
+
+    // Get current file safely
+    const currentFile = this.plugin.getCurrentFile();
+    if (!currentFile) {
+      console.warn("No current file found. Cannot start timer.");
+      return;
     }
 
-    if (this.settings.betterIndicator === true) {
-      if (this.isActive(mode)) {
-        const remote = electron.remote;
-        const BrowserWindow = remote.BrowserWindow;
-        const win = new BrowserWindow({
-          height: 600,
-          width: 800,
-        });
-        this.win = win;
-        this.workItem.activeNote
-          ? win.loadURL(
-              "https://grassbl8d.github.io/react-stopwatch/?taskName=" +
-                this.workItem.activeNote.basename +
-                "&reset=true"
-            )
-          : win.loadURL("https://grassbl8d.github.io/react-stopwatch");
-      }
+    // Create a new WorkItem for this file
+    console.log("[Timer] Starting timer, current file:", currentFile);
+    this.workItem = new WorkItem(currentFile, true);
+    console.log("[Timer] Created WorkItem:", this.workItem);
+
+    // Add WorkItem to the workbench and update pane automatically
+    const workbench = this.plugin.pomoWorkBench;
+    if (workbench) {
+      workbench.addWorkbenchItem(this.workItem);
     }
+
+    // Initialize timer start/end times
     this.setStartAndEndTime(this.getTotalModeMillisecs());
     this.originalStartTime = moment();
+
+    // Show starting notification
     this.modeStartingNotification();
+
+    // Start white noise if enabled
     if (this.settings.whiteNoise === true) {
       this.whiteNoisePlayer.whiteNoise();
     }
-    this.plugin.pomoWorkBench.redraw();
   }
 
   private isActive(
@@ -477,13 +418,15 @@ export class Timer {
 
   /*Return milliseconds left until end of timer*/
   getCountdown(): number {
-    let endTimeClone = this.endTime.clone(); //rewrite with freeze?
-    return endTimeClone.diff(moment());
+    // Guard against undefined endTime
+    if (!this.endTime) return this.pausedTime ?? 0;
+    return this.endTime.diff(moment());
   }
 
   getStopwatch(): number {
-    let startTimeClone = this.extendedTime.clone(); //rewrite with freeze?
-    return moment().diff(startTimeClone.toDate());
+    if (!this.startTime && !this.extendedTime) return 0;
+    const start = this.extendedTime ?? this.startTime ?? moment();
+    return moment().diff(start);
   }
 
   getTotalModeMillisecs(): number {
@@ -513,15 +456,13 @@ export class Timer {
   }
 
   startCountdown(durationMs: number, onFinish: () => void) {
-    this.quitTimer(); // ensure clean state
-
-    this.mode = Mode.PomoCustom; // reuse existing ticking logic
-    this.extendPomodoroTime = false;
+    // Ensure clean state
+    this.quitTimer().catch((err) => console.error(err));
 
     this.countdownEndAt = Date.now() + durationMs;
     this.onCountdownFinished = onFinish;
 
-    this.startTime = window.moment();
+    this.startTime = moment();
     this.triggered = false;
   }
   /**************  Notifications  **************/
