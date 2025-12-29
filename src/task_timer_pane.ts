@@ -14,6 +14,7 @@ export class TaskTimerPane {
   private container: HTMLElement;
   private interval: number | null = null;
   private notifiedTasks = new Set<TaskRuntime>();
+  private lastRenderedNull = false; // prevents repeated null logging
 
   constructor(
     plugin: FlexiblePomoTimerPlugin,
@@ -36,9 +37,8 @@ export class TaskTimerPane {
   public setWorkItem(workItem: WorkItem | null) {
     this.workItem = workItem;
 
-    // ✅ Correct: reset expiration state when switching notes
+    // clear previous notifications only when switching WorkItems
     this.notifiedTasks.clear();
-
     this.render();
   }
 
@@ -60,17 +60,12 @@ export class TaskTimerPane {
   private autoComplete(runtime: TaskRuntime) {
     runtime.completed = true;
     runtime.remainingMs = 0;
-
-    // ✅ mark as handled so it doesn't fire again
-    this.notifiedTasks.add(runtime);
-
+    this.notifiedTasks.add(runtime); // prevent repeated auto-complete
     void this.persist();
   }
 
   private openExpirationModal(runtime: TaskRuntime) {
-    // ✅ mark immediately to prevent modal spam
-    this.notifiedTasks.add(runtime);
-
+    this.notifiedTasks.add(runtime); // prevent repeated modal
     new ExpirationModal(
       this.app,
       runtime,
@@ -101,8 +96,14 @@ export class TaskTimerPane {
 
     if (!this.workItem || !this.workItem.runtimes?.size) {
       this.container.setText("No tasks loaded yet...");
+      if (!this.lastRenderedNull) {
+        console.log("[TaskTimerPane] Rendering null");
+        this.lastRenderedNull = true;
+      }
       return;
     }
+
+    this.lastRenderedNull = false;
 
     const runtimes = [...this.workItem.runtimes.values()];
     this.container.createEl("h4", { text: "Task Timer Pane" });
@@ -115,13 +116,10 @@ export class TaskTimerPane {
 
       const hasDuration =
         runtime.task.estimatedMs !== undefined && runtime.task.estimatedMs > 0;
-
       const remainingMs = hasDuration ? runtime.getDynamicRemaining() : 0;
 
       /* ---------- status ---------- */
-
       let status: string;
-
       if (!hasDuration) {
         status = "⛔ No duration set";
         taskEl.addClass("task-timer-item-ineligible");
@@ -134,14 +132,12 @@ export class TaskTimerPane {
       }
 
       /* ---------- totals ---------- */
-      // ✅ FIX: paused tasks should NOT affect finish-time math
       if (hasDuration && !runtime.completed && !runtime.paused) {
         cumulativeMs += remainingMs;
         totalRemainingMs += remainingMs;
       }
 
       /* ---------- styling ---------- */
-
       if (
         hasDuration &&
         this.plugin.settings.highlightActiveTask &&
@@ -151,12 +147,10 @@ export class TaskTimerPane {
       }
 
       /* ---------- text ---------- */
-
       const remainingMin = Math.floor(remainingMs / 60000);
       const remainingSec = Math.floor((remainingMs % 60000) / 1000);
 
       let text = `${runtime.task.lineContent.trim()} — ${status}`;
-
       if (hasDuration) {
         text += ` — ${remainingMin}m ${remainingSec}s`;
       }
@@ -174,7 +168,6 @@ export class TaskTimerPane {
       taskEl.setText(text);
 
       /* ---------- expiration ---------- */
-      // ✅ FIX: expiration fires once per runtime
       if (
         hasDuration &&
         !runtime.completed &&
@@ -191,7 +184,6 @@ export class TaskTimerPane {
     }
 
     /* ---------- totals footer ---------- */
-
     const totalMin = Math.floor(totalRemainingMs / 60000);
     const totalSec = Math.floor((totalRemainingMs % 60000) / 1000);
 

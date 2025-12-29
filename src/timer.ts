@@ -13,6 +13,7 @@ import FlexiblePomoTimerPlugin from "./main";
 import { confirmWithModal } from "./extend_modal";
 import { PomoTaskItem } from "./PomoTaskItem";
 import { WorkItem } from "./workbench/workitem";
+import { TaskRuntime } from "./task_runtime";
 
 const MILLISECS_IN_MINUTE = 60 * 1000;
 const electron = require("electron");
@@ -337,57 +338,91 @@ export class Timer {
   }
 
   togglePause() {
-    if (this.paused === true) {
+    if (!this.workItem) return;
+
+    if (this.paused) {
+      // Resume timer
       this.restartTimer();
+      new Notice("Timer resumed.");
     } else if (this.mode !== Mode.NoTimer) {
-      //if some timer running
-      this.pauseTimer();
+      // Pause timer
+      this.paused = true;
+      this.pausedTime = this.getCountdown();
+
+      if (this.settings.whiteNoise) {
+        this.whiteNoisePlayer.stopWhiteNoise();
+      }
       new Notice("Timer paused.");
     }
   }
 
   restartTimer(): void {
+    if (!this.workItem) return;
+
     this.setStartAndEndTime(this.pausedTime);
     this.modeRestartingNotification();
     this.paused = false;
-    if (this.settings.whiteNoise === true) {
+
+    if (this.settings.whiteNoise) {
       this.whiteNoisePlayer.whiteNoise();
     }
   }
 
-  startTimer(mode: Mode) {
+  async startTimer(mode: Mode) {
     this.mode = mode;
     this.paused = false;
 
-    // Get current file safely
     const currentFile = this.plugin.getCurrentFile();
     if (!currentFile) {
-      console.warn("No current file found. Cannot start timer.");
+      console.warn("[Timer] No current file found. Cannot start timer.");
       return;
     }
 
-    // Create a new WorkItem for this file
-    console.log("[Timer] Starting timer, current file:", currentFile);
-    this.workItem = new WorkItem(currentFile, true);
-    console.log("[Timer] Created WorkItem:", this.workItem);
-
-    // Add WorkItem to the workbench and update pane automatically
     const workbench = this.plugin.pomoWorkBench;
-    if (workbench) {
-      workbench.addWorkbenchItem(this.workItem);
+    if (!workbench) {
+      console.warn("[Timer] No workbench available.");
+      return;
     }
+
+    // Try to find an existing WorkItem
+    let workItem = workbench.workItems.find(
+      (wi) => wi.activeNote.path === currentFile.path
+    );
+
+    // If missing, create a new WorkItem and gather tasks
+    if (!workItem) {
+      workItem = new WorkItem(currentFile, true);
+      workbench.addWorkbenchItem(workItem);
+
+      await this.plugin.parseUtility.gatherLineItems(
+        workItem,
+        workItem.initialPomoTaskItems,
+        true,
+        currentFile
+      );
+      workItem.initializeTaskRuntimes();
+    }
+
+    this.workItem = workItem;
 
     // Initialize timer start/end times
     this.setStartAndEndTime(this.getTotalModeMillisecs());
     this.originalStartTime = moment();
 
-    // Show starting notification
+    // Notify user
     this.modeStartingNotification();
 
     // Start white noise if enabled
-    if (this.settings.whiteNoise === true) {
+    if (this.settings.whiteNoise) {
       this.whiteNoisePlayer.whiteNoise();
     }
+
+    console.log(
+      "[Timer] WorkItem ready with tasks:",
+      workItem.initialPomoTaskItems.length,
+      "runtimes:",
+      workItem.runtimes.size
+    );
   }
 
   private isActive(
@@ -601,7 +636,10 @@ export class Timer {
             ""
           );
       }
-      if (this.settings.logPomodoroDuration === true) {
+      if (
+        this.settings.logPomodoroDuration === true &&
+        this.originalStartTime
+      ) {
         if (!isWorkBench) {
           logText =
             logText +

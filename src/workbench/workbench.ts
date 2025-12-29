@@ -15,6 +15,7 @@ import { Mode } from "../timer";
 import { CurrentProgressModal } from "../current_progress_modal";
 import { TaskTimerPane } from "../task_timer_pane";
 import { ItemView } from "obsidian";
+import { TaskRuntime } from "src/task_runtime";
 
 export default class FlexiblePomoWorkbench {
   public data: WorkbenchFilesData;
@@ -92,17 +93,22 @@ export default class FlexiblePomoWorkbench {
     const existing = this.workItems.find(
       (wi) => wi.activeNote.path === newWorkItem.activeNote.path
     );
+
     if (existing) {
       existing.isStartedActiveNote = true;
     } else {
       this.workItems.push(newWorkItem);
     }
 
-    // Update the TaskTimerPane with the first active WorkItem
+    // Update the TaskTimerPane only if it exists and WorkItem changed
     if (this.taskTimerPane) {
-      this.taskTimerPane.setWorkItem(this.workItems[0] || null);
+      const firstItem = this.workItems[0] || null;
+      if (this.taskTimerPane.workItem !== firstItem) {
+        this.taskTimerPane.setWorkItem(firstItem);
+      }
     }
   }
+
   public async initView(): Promise<void> {
     let leaf: WorkspaceLeaf | null = null;
 
@@ -148,7 +154,7 @@ export default class FlexiblePomoWorkbench {
 
   public async linkFile(
     openedFile: TFile,
-    initialWorkItems: PomoTaskItem[]
+    initialWorkItems?: PomoTaskItem[]
   ): Promise<void> {
     // Skip if already exists
     const existsInWorkbench = this.workItems.some(
@@ -159,7 +165,12 @@ export default class FlexiblePomoWorkbench {
     // Create new WorkItem
     const newWorkItem = new WorkItem(openedFile, false);
 
-    // Gather initial lines/tasks
+    // Optionally set initial task items first
+    if (initialWorkItems && initialWorkItems.length > 0) {
+      newWorkItem.initialPomoTaskItems = initialWorkItems;
+    }
+
+    // Gather line items from the file and merge with initial tasks
     await this.plugin.parseUtility.gatherLineItems(
       newWorkItem,
       newWorkItem.initialPomoTaskItems,
@@ -167,14 +178,16 @@ export default class FlexiblePomoWorkbench {
       openedFile
     );
 
-    if (initialWorkItems) {
-      newWorkItem.initialPomoTaskItems = initialWorkItems;
-    }
+    // Initialize runtimes
+    newWorkItem.initializeTaskRuntimes();
 
-    // Add to workbench and update pane
+    console.log("[Workbench] WorkItem ready:", newWorkItem);
+    console.log("[Workbench] Runtimes initialized:", newWorkItem.runtimes);
+
+    // Add to workbench and update TaskTimerPane
     this.addWorkbenchItem(newWorkItem);
 
-    // Redraw view
+    // Redraw the workbench view
     this.redraw();
   }
 
@@ -202,10 +215,12 @@ export default class FlexiblePomoWorkbench {
     }
 
     // Update pane
-    if (this.taskTimerPane) {
+    if (
+      this.taskTimerPane &&
+      this.taskTimerPane.workItem !== this.workItems[0]
+    ) {
       this.taskTimerPane.setWorkItem(this.workItems[0] || null);
     }
-
     this.redraw();
   }
 
