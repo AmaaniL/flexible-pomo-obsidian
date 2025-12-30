@@ -4,6 +4,7 @@ import { TaskRuntime } from "./task_runtime";
 import { ExpirationModal } from "./expiration_modal";
 import { FilePersistence } from "./file_persistence";
 import FlexiblePomoTimerPlugin from "./main";
+import { PomoTaskItem } from "./PomoTaskItem";
 
 export class TaskTimerPane {
   private plugin: FlexiblePomoTimerPlugin;
@@ -43,6 +44,24 @@ export class TaskTimerPane {
   }
 
   /* ----------------------------- helpers ----------------------------- */
+  private onTaskClicked(task: PomoTaskItem) {
+    if (!this.workItem) return;
+
+    const runtime = this.workItem.runtimes.get(task);
+    if (!runtime) return;
+
+    // Pause current task
+    this.workItem.pauseActiveRuntime();
+
+    // Switch active task
+    this.workItem.setActiveRuntime(runtime);
+
+    // Start it
+    runtime.startedAt = Date.now();
+    runtime.paused = false;
+
+    this.render();
+  }
 
   private formatTime(date: Date | null): string {
     if (!date) return "--:--";
@@ -113,7 +132,9 @@ export class TaskTimerPane {
 
     for (const runtime of runtimes) {
       const taskEl = this.container.createDiv({ cls: "task-timer-item" });
-
+      taskEl.addEventListener("click", () => {
+        this.onTaskClicked(runtime.task);
+      });
       const hasDuration =
         runtime.task.estimatedMs !== undefined && runtime.task.estimatedMs > 0;
       const remainingMs = hasDuration ? runtime.getDynamicRemaining() : 0;

@@ -404,7 +404,19 @@ export class Timer {
     }
 
     this.workItem = workItem;
+    const activeRuntime = workItem.getActiveRuntime?.();
 
+    if (activeRuntime) {
+      // Pause all other runtimes (defensive)
+      workItem.runtimes.forEach((rt) => {
+        if (rt !== activeRuntime) rt.paused = true;
+      });
+
+      if (activeRuntime.paused) {
+        activeRuntime.startedAt = Date.now();
+        activeRuntime.paused = false;
+      }
+    }
     // Initialize timer start/end times
     this.setStartAndEndTime(this.getTotalModeMillisecs());
     this.originalStartTime = moment();

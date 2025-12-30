@@ -11,7 +11,7 @@ export class WorkItem {
 
   // Runtime management
   runtimes: Map<PomoTaskItem, TaskRuntime>;
-  activeRuntime: TaskRuntime | null;
+  activeRuntime: TaskRuntime | null = null;
 
   // Task timer pane / active tasks
   timedTasks: PomoTaskItem[];
@@ -64,5 +64,22 @@ export class WorkItem {
       );
     });
     console.log("[DEBUG] Active runtime:", this.activeRuntime);
+  }
+  getActiveRuntime(): TaskRuntime | null {
+    return (
+      this.activeRuntime ??
+      [...this.runtimes.values()].find((rt) => !rt.completed) ??
+      null
+    );
+  }
+
+  pauseActiveRuntime() {
+    if (this.activeRuntime) {
+      this.activeRuntime.paused = true;
+    }
+  }
+
+  setActiveRuntime(runtime: TaskRuntime) {
+    this.activeRuntime = runtime;
   }
 }

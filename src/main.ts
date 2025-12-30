@@ -29,6 +29,7 @@ import { LoadingSuggester } from "./flexipomosuggesters/LoadingSuggester";
 import { FileUtility } from "./file_utility";
 import { askCustomTimeModal } from "./ui/custom_time_modal";
 import { TASK_TIMER_VIEW_TYPE, TaskTimerView } from "./task_timer_view";
+import { runWorkbenchTaskTimerTest } from "./debug";
 
 export default class FlexiblePomoTimerPlugin extends Plugin {
   settings: PomoSettings;
@@ -44,6 +45,12 @@ export default class FlexiblePomoTimerPlugin extends Plugin {
   lastOpenedFile: TFile | null = null;
 
   async onload() {
+    this.registerEvent(
+      this.app.workspace.on("active-leaf-change", async () => {
+        await runWorkbenchTaskTimerTest(this);
+      })
+    );
+
     this.app.workspace.detachLeavesOfType(WorkbenchItemsListViewType);
 
     await this.loadSettings();
