@@ -44,21 +44,30 @@ export class TaskTimerPane {
   }
 
   /* ----------------------------- helpers ----------------------------- */
-  private onTaskClicked(task: PomoTaskItem) {
-    if (!this.workItem) return;
-
-    const runtime = this.workItem.runtimes.get(task);
+  public onTaskClicked(task: PomoTaskItem) {
+    const runtime = this.workItem?.runtimes.get(task);
     if (!runtime) return;
 
-    // Pause current task
-    this.workItem.pauseActiveRuntime();
+    const timer = this.plugin.timer;
 
-    // Switch active task
+    // Prevent switching during breaks
+    if (timer.isPomoBreak()) return;
+
+    // Pause current runtime if active
+    if (
+      this.workItem?.activeRuntime &&
+      !this.workItem.activeRuntime.completed
+    ) {
+      this.workItem.activeRuntime.pause();
+    }
+
+    // Switch to clicked task
     this.workItem.setActiveRuntime(runtime);
 
-    // Start it
-    runtime.startedAt = Date.now();
-    runtime.paused = false;
+    // Resume new runtime if timer is running and not paused
+    if (!timer.paused && !runtime.completed) {
+      runtime.start();
+    }
 
     this.render();
   }

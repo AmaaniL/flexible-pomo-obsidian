@@ -265,7 +265,7 @@ export class Timer {
     }
   }
 
-  private isPomoBreak() {
+  public isPomoBreak() {
     return (
       this.mode === Mode.ShortBreak ||
       this.mode === Mode.LongBreak ||
@@ -373,27 +373,18 @@ export class Timer {
     this.paused = false;
 
     const currentFile = this.plugin.getCurrentFile();
-    if (!currentFile) {
-      console.warn("[Timer] No current file found. Cannot start timer.");
-      return;
-    }
+    if (!currentFile) return;
 
     const workbench = this.plugin.pomoWorkBench;
-    if (!workbench) {
-      console.warn("[Timer] No workbench available.");
-      return;
-    }
+    if (!workbench) return;
 
-    // Try to find an existing WorkItem
+    // Find or create workItem
     let workItem = workbench.workItems.find(
       (wi) => wi.activeNote.path === currentFile.path
     );
-
-    // If missing, create a new WorkItem and gather tasks
     if (!workItem) {
       workItem = new WorkItem(currentFile, true);
       workbench.addWorkbenchItem(workItem);
-
       await this.plugin.parseUtility.gatherLineItems(
         workItem,
         workItem.initialPomoTaskItems,
@@ -404,30 +395,22 @@ export class Timer {
     }
 
     this.workItem = workItem;
-    const activeRuntime = workItem.getActiveRuntime?.();
 
-    if (activeRuntime) {
-      // Pause all other runtimes (defensive)
-      workItem.runtimes.forEach((rt) => {
-        if (rt !== activeRuntime) rt.paused = true;
-      });
-
-      if (activeRuntime.paused) {
-        activeRuntime.startedAt = Date.now();
-        activeRuntime.paused = false;
-      }
+    // Auto-start the first eligible task
+    const firstEligible = [...workItem.runtimes.values()].find(
+      (rt) => !rt.completed && rt.task.estimatedMs > 0
+    );
+    if (firstEligible) {
+      workItem.setActiveRuntime(firstEligible);
+      firstEligible.start();
     }
-    // Initialize timer start/end times
+
     this.setStartAndEndTime(this.getTotalModeMillisecs());
     this.originalStartTime = moment();
 
-    // Notify user
     this.modeStartingNotification();
 
-    // Start white noise if enabled
-    if (this.settings.whiteNoise) {
-      this.whiteNoisePlayer.whiteNoise();
-    }
+    if (this.settings.whiteNoise) this.whiteNoisePlayer.whiteNoise();
 
     console.log(
       "[Timer] WorkItem ready with tasks:",
