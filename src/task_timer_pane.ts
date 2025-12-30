@@ -141,9 +141,7 @@ export class TaskTimerPane {
 
     for (const runtime of runtimes) {
       const taskEl = this.container.createDiv({ cls: "task-timer-item" });
-      taskEl.addEventListener("click", () => {
-        this.onTaskClicked(runtime.task);
-      });
+
       const hasDuration =
         runtime.task.estimatedMs !== undefined && runtime.task.estimatedMs > 0;
       const remainingMs = hasDuration ? runtime.getDynamicRemaining() : 0;
@@ -162,9 +160,9 @@ export class TaskTimerPane {
       }
 
       /* ---------- totals ---------- */
-      if (hasDuration && !runtime.completed && !runtime.paused) {
-        cumulativeMs += remainingMs;
+      if (hasDuration && !runtime.completed) {
         totalRemainingMs += remainingMs;
+        if (!runtime.paused) cumulativeMs += remainingMs;
       }
 
       /* ---------- styling ---------- */
@@ -181,9 +179,7 @@ export class TaskTimerPane {
       const remainingSec = Math.floor((remainingMs % 60000) / 1000);
 
       let text = `${runtime.task.lineContent.trim()} — ${status}`;
-      if (hasDuration) {
-        text += ` — ${remainingMin}m ${remainingSec}s`;
-      }
+      if (hasDuration) text += ` — ${remainingMin}m ${remainingSec}s`;
 
       if (
         hasDuration &&
@@ -196,6 +192,9 @@ export class TaskTimerPane {
       }
 
       taskEl.setText(text);
+
+      // Click handler to switch tasks
+      taskEl.onclick = () => this.onTaskClicked(runtime.task);
 
       /* ---------- expiration ---------- */
       if (
@@ -218,7 +217,7 @@ export class TaskTimerPane {
     const totalSec = Math.floor((totalRemainingMs % 60000) / 1000);
 
     this.container.createEl("div", {
-      text: `Total Remaining: ${totalMin}m ${totalSec}s`,
+      text: `Total Remaining (all eligible tasks): ${totalMin}m ${totalSec}s`,
     });
 
     const expectedFinish = new Date(Date.now() + totalRemainingMs);
