@@ -13,9 +13,8 @@ import { WorkItem } from "../workbench/workitem";
 import { PomoTaskItem } from "../PomoTaskItem";
 import { Mode } from "../timer";
 import { CurrentProgressModal } from "../current_progress_modal";
-import { TaskTimerPane } from "../task_timer_pane";
+import { TASK_TIMER_VIEW_TYPE, TaskTimerPane } from "../task_timer_pane";
 import { ItemView } from "obsidian";
-import { TaskRuntime } from "src/task_runtime";
 
 export default class FlexiblePomoWorkbench {
   public data: WorkbenchFilesData;
@@ -112,17 +111,13 @@ export default class FlexiblePomoWorkbench {
   public async initView(): Promise<void> {
     let leaf: WorkspaceLeaf | null = null;
 
-    // Use an existing leaf if available
-    for (const l of this.plugin.app.workspace.getLeavesOfType(
-      WorkbenchItemsListViewType
-    )) {
-      if (l.view instanceof WorkbenchItemsListView) return;
-      leaf = l;
-      break;
-    }
+    // Try to reuse existing TaskTimerPane leaf
+    const existingLeaves =
+      this.plugin.app.workspace.getLeavesOfType(TASK_TIMER_VIEW_TYPE);
 
-    // Otherwise get a leaf on left or right based on settings
-    if (!leaf) {
+    if (existingLeaves.length > 0) {
+      leaf = existingLeaves[0];
+    } else {
       leaf =
         this.plugin.settings.workbench_location === "left"
           ? this.plugin.app.workspace.getLeftLeaf(false)
@@ -130,25 +125,19 @@ export default class FlexiblePomoWorkbench {
     }
 
     await leaf.setViewState({
-      type: WorkbenchItemsListViewType,
+      type: TASK_TIMER_VIEW_TYPE,
       active: true,
     });
+
     await this.plugin.app.workspace.revealLeaf(leaf);
 
-    // Destroy old pane if exists
-    if (this.taskTimerPane) this.taskTimerPane.destroy();
+    const view = leaf.view;
+    if (view instanceof TaskTimerPane) {
+      this.taskTimerPane = view;
 
-    // Create TaskTimerPane with null initially
-    const itemView = leaf.view as ItemView;
-    this.taskTimerPane = new TaskTimerPane(
-      this.plugin,
-      itemView.contentEl,
-      null
-    );
-
-    // If any workItems exist, update pane
-    if (this.workItems.length > 0) {
-      this.taskTimerPane.setWorkItem(this.workItems[0]);
+      if (this.workItems.length > 0) {
+        view.setWorkItem(this.workItems[0]);
+      }
     }
   }
 

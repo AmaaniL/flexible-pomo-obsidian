@@ -395,14 +395,22 @@ export class Timer {
     }
 
     this.workItem = workItem;
+    // Ensure workItem has runtimes initialized
+    workItem.initializeTaskRuntimes();
 
-    // Auto-start the first eligible task
-    const firstEligible = [...workItem.runtimes.values()].find(
-      (rt) => !rt.completed && rt.task.estimatedMs > 0
-    );
-    if (firstEligible) {
-      workItem.setActiveRuntime(firstEligible);
-      firstEligible.start();
+    // Auto-start the first eligible task if none is active
+    if (!workItem.activeRuntime) {
+      const firstEligible = [...workItem.runtimes.values()].find(
+        (rt) => !rt.completed && rt.task.estimatedMs > 0
+      );
+      if (firstEligible) {
+        workItem.setActiveRuntime(firstEligible);
+
+        // Only start if the timer itself is running and not paused
+        if (!this.paused) {
+          firstEligible.start();
+        }
+      }
     }
 
     this.setStartAndEndTime(this.getTotalModeMillisecs());

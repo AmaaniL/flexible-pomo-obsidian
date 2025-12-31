@@ -80,6 +80,10 @@ export default class FlexiblePomoTimerPlugin extends Plugin {
         }
       });
     }
+    this.registerView(
+      TASK_TIMER_VIEW_TYPE,
+      (leaf) => new TaskTimerPane(leaf, this)
+    );
 
     this.pomoWorkBench = new FlexiblePomoWorkbench(
       this.app.workspace.activeLeaf,

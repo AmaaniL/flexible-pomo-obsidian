@@ -3,8 +3,8 @@ import { TaskRuntime } from "./task_runtime";
 import { PomoTaskItem } from "./PomoTaskItem";
 import { Timer } from "./timer";
 import { Notice } from "obsidian";
-import { TaskExpirationModal } from "./task_expiration_modal";
 import { App } from "obsidian";
+import { ExpirationModal } from "./expiration_modal";
 
 export class TaskTimeboxManager {
   private app: App;
@@ -137,7 +137,7 @@ export class TaskTimeboxManager {
 
     new Notice(`⏱ Task timebox finished: ${runtime.task.lineContent.trim()}`);
 
-    new TaskExpirationModal(
+    new ExpirationModal(
       this.app,
       runtime,
       () => {
