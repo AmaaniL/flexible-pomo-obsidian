@@ -74,12 +74,19 @@ export class WorkItem {
   }
 
   pauseActiveRuntime() {
-    if (this.activeRuntime) {
-      this.activeRuntime.paused = true;
-    }
+    this.activeRuntime?.pause();
   }
+  setActiveRuntime(runtime: TaskRuntime | null) {
+    if (this.activeRuntime === runtime) return;
 
-  setActiveRuntime(runtime: TaskRuntime) {
+    if (this.activeRuntime) {
+      this.activeRuntime.pause();
+    }
+
     this.activeRuntime = runtime;
+
+    if (runtime) {
+      runtime.start();
+    }
   }
 }
