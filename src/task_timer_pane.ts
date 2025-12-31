@@ -1,49 +1,69 @@
-import { App, WorkspaceLeaf } from "obsidian";
+import { App, ItemView, WorkspaceLeaf } from "obsidian";
+import FlexiblePomoTimerPlugin from "./main";
 import { WorkItem } from "./workbench/workitem";
 import { TaskRuntime } from "./task_runtime";
 import { ExpirationModal } from "./expiration_modal";
 import { FilePersistence } from "./file_persistence";
-import FlexiblePomoTimerPlugin from "./main";
 import { PomoTaskItem } from "./PomoTaskItem";
 
-export class TaskTimerPane {
-  private plugin: FlexiblePomoTimerPlugin;
-  private app: App;
-  private leaf: WorkspaceLeaf;
-  public workItem: WorkItem | null;
+export const TASK_TIMER_VIEW_TYPE = "flexible-pomo-task-timer";
 
-  private container: HTMLElement;
+export class TaskTimerPane extends ItemView {
+  private plugin: FlexiblePomoTimerPlugin;
+
+  public workItem: WorkItem | null = null;
+
+  private container!: HTMLElement;
   private interval: number | null = null;
   private notifiedTasks = new Set<TaskRuntime>();
-  private lastRenderedNull = false; // prevents repeated null logging
+  private lastRenderedNull = false;
 
-  constructor(
-    plugin: FlexiblePomoTimerPlugin,
-    parentEl: HTMLElement,
-    workItem: WorkItem | null = null
-  ) {
+  constructor(leaf: WorkspaceLeaf, plugin: FlexiblePomoTimerPlugin) {
+    super(leaf);
     this.plugin = plugin;
-    this.app = plugin.app;
-    this.workItem = workItem;
+  }
 
-    this.container = parentEl.createDiv({
+  /* ---------------- Obsidian view metadata ---------------- */
+
+  getViewType(): string {
+    return TASK_TIMER_VIEW_TYPE;
+  }
+
+  getDisplayText(): string {
+    return "Task Timer";
+  }
+
+  /* ---------------- lifecycle ---------------- */
+
+  async onOpen() {
+    this.container = this.contentEl.createDiv({
       cls: "task-timer-pane",
     });
 
     this.interval = window.setInterval(() => this.render(), 1000);
+    this.render();
   }
 
-  /* ------------------------------ lifecycle ------------------------------ */
+  async onClose() {
+    this.destroy();
+  }
+
+  public destroy() {
+    if (this.interval) {
+      window.clearInterval(this.interval);
+      this.interval = null;
+    }
+    this.contentEl.empty();
+  }
 
   public setWorkItem(workItem: WorkItem | null) {
     this.workItem = workItem;
-
-    // clear previous notifications only when switching WorkItems
     this.notifiedTasks.clear();
     this.render();
   }
 
-  /* ----------------------------- helpers ----------------------------- */
+  /* ---------------- helpers ---------------- */
+
   public onTaskClicked(task: PomoTaskItem) {
     const runtime = this.workItem?.runtimes.get(task);
     if (!runtime) return;
@@ -53,7 +73,7 @@ export class TaskTimerPane {
     // Prevent switching during breaks
     if (timer.isPomoBreak()) return;
 
-    // Pause current runtime if active
+    // Pause current runtime
     if (
       this.workItem?.activeRuntime &&
       !this.workItem.activeRuntime.completed
@@ -61,10 +81,10 @@ export class TaskTimerPane {
       this.workItem.activeRuntime.pause();
     }
 
-    // Switch to clicked task
-    this.workItem.setActiveRuntime(runtime);
+    // Switch runtime
+    this.workItem?.setActiveRuntime(runtime);
 
-    // Resume new runtime if timer is running and not paused
+    // Resume if timer running
     if (!timer.paused && !runtime.completed) {
       runtime.start();
     }
@@ -88,12 +108,13 @@ export class TaskTimerPane {
   private autoComplete(runtime: TaskRuntime) {
     runtime.completed = true;
     runtime.remainingMs = 0;
-    this.notifiedTasks.add(runtime); // prevent repeated auto-complete
+    this.notifiedTasks.add(runtime);
     void this.persist();
   }
 
   private openExpirationModal(runtime: TaskRuntime) {
-    this.notifiedTasks.add(runtime); // prevent repeated modal
+    this.notifiedTasks.add(runtime);
+
     new ExpirationModal(
       this.app,
       runtime,
@@ -107,17 +128,14 @@ export class TaskTimerPane {
         runtime.remainingMs += extraMs;
         runtime.startedAt = Date.now();
         runtime.paused = false;
-
-        // allow re-expiration after extension
         this.notifiedTasks.delete(runtime);
-
         await this.persist();
         this.render();
       }
     ).open();
   }
 
-  /* ------------------------------ render ------------------------------ */
+  /* ---------------- render ---------------- */
 
   public render() {
     this.container.empty();
@@ -146,7 +164,6 @@ export class TaskTimerPane {
         runtime.task.estimatedMs !== undefined && runtime.task.estimatedMs > 0;
       const remainingMs = hasDuration ? runtime.getDynamicRemaining() : 0;
 
-      /* ---------- status ---------- */
       let status: string;
       if (!hasDuration) {
         status = "⛔ No duration set";
@@ -159,13 +176,11 @@ export class TaskTimerPane {
         status = "▶ Active";
       }
 
-      /* ---------- totals ---------- */
       if (hasDuration && !runtime.completed) {
         totalRemainingMs += remainingMs;
         if (!runtime.paused) cumulativeMs += remainingMs;
       }
 
-      /* ---------- styling ---------- */
       if (
         hasDuration &&
         this.plugin.settings.highlightActiveTask &&
@@ -174,7 +189,6 @@ export class TaskTimerPane {
         taskEl.addClass("task-timer-item-active");
       }
 
-      /* ---------- text ---------- */
       const remainingMin = Math.floor(remainingMs / 60000);
       const remainingSec = Math.floor((remainingMs % 60000) / 1000);
 
@@ -192,11 +206,8 @@ export class TaskTimerPane {
       }
 
       taskEl.setText(text);
-
-      // Click handler to switch tasks
       taskEl.onclick = () => this.onTaskClicked(runtime.task);
 
-      /* ---------- expiration ---------- */
       if (
         hasDuration &&
         !runtime.completed &&
@@ -212,7 +223,6 @@ export class TaskTimerPane {
       }
     }
 
-    /* ---------- totals footer ---------- */
     const totalMin = Math.floor(totalRemainingMs / 60000);
     const totalSec = Math.floor((totalRemainingMs % 60000) / 1000);
 
@@ -220,21 +230,10 @@ export class TaskTimerPane {
       text: `Total Remaining (all eligible tasks): ${totalMin}m ${totalSec}s`,
     });
 
-    const expectedFinish = new Date(Date.now() + totalRemainingMs);
     this.container.createEl("div", {
       text: `Expected Finish (eligible tasks): ${this.formatTime(
-        expectedFinish
+        new Date(Date.now() + totalRemainingMs)
       )}`,
     });
-  }
-
-  /* ----------------------------- teardown ----------------------------- */
-
-  public destroy() {
-    if (this.interval) {
-      window.clearInterval(this.interval);
-      this.interval = null;
-    }
-    this.container.remove();
   }
 }

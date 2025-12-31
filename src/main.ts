@@ -28,7 +28,7 @@ import { SavingSuggester } from "./suggesters/SavingSuggester";
 import { LoadingSuggester } from "./flexipomosuggesters/LoadingSuggester";
 import { FileUtility } from "./file_utility";
 import { askCustomTimeModal } from "./ui/custom_time_modal";
-import { TASK_TIMER_VIEW_TYPE, TaskTimerView } from "./task_timer_view";
+import { TASK_TIMER_VIEW_TYPE, TaskTimerPane } from "./task_timer_pane";
 import { runWorkbenchTaskTimerTest } from "./debug";
 
 export default class FlexiblePomoTimerPlugin extends Plugin {
@@ -147,7 +147,7 @@ export default class FlexiblePomoTimerPlugin extends Plugin {
     this.registerPomodoroCommands();
     this.registerView(
       TASK_TIMER_VIEW_TYPE,
-      (leaf) => new TaskTimerView(leaf, this)
+      (leaf) => new TaskTimerPane(leaf, this)
     );
     this.addCommand({
       id: "show-task-timer-pane",
@@ -681,7 +681,7 @@ export default class FlexiblePomoTimerPlugin extends Plugin {
     for (const leaf of leaves) {
       const view = leaf.view;
 
-      if (!(view instanceof TaskTimerView)) {
+      if (!(view instanceof TaskTimerPane)) {
         continue;
       }
 
