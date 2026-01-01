@@ -6,8 +6,8 @@ import {
   TFile,
   TFolder,
 } from "obsidian";
-import { flatten, uniq } from "./collection-helper";
-import { basename, dirname, extname } from "./path";
+import { flatten, uniq } from "../flexipomosuggesters/collection-helper";
+import { basename, dirname, extname } from "../flexipomosuggesters/path";
 
 export class AppHelper {
   constructor(private app: App) {}

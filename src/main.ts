@@ -2,7 +2,7 @@ import * as feather from "feather-icons";
 import { addIcon, Notice, Plugin, TAbstractFile, TFile } from "obsidian";
 import { runWorkbenchTaskTimerTest } from "./debug";
 import { FileUtility } from "./persistence/file_utility";
-import { LoadingSuggester } from "./flexipomosuggesters/LoadingSuggester";
+import { LoadingSuggester } from "./obsidian/LoadingSuggester";
 import { ParseUtility } from "./parsing/parse_utility";
 import {
   DEFAULT_SETTINGS,
