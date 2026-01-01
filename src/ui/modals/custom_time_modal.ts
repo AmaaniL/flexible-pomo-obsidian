@@ -1,6 +1,6 @@
 import { App, ButtonComponent, Modal, Notice, TextComponent } from "obsidian";
 import FlexiblePomoTimerPlugin from "src/main";
-import { Mode, Timer } from "src/timer";
+import { Mode, Timer } from "src/core/timer/timer";
 
 export async function askCustomTimeModal(
   app: App,

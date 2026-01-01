@@ -1,7 +1,7 @@
 import { WorkItem } from "src/workbench/workitem";
 import { TaskRuntime } from "./task_runtime";
 import { PomoTaskItem } from "./pomo_task_item";
-import { Timer } from "src/timer";
+import { Timer } from "src/core/timer/timer";
 import { Notice } from "obsidian";
 import { App } from "obsidian";
 import { ExpirationModal } from "src/ui/modals/expiration_modal";

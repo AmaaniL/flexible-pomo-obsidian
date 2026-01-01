@@ -11,7 +11,7 @@ import {
 } from "./workbench_data";
 import { WorkItem } from "../workbench/workitem";
 import { PomoTaskItem } from "src/core/tasks/pomo_task_item";
-import { Mode } from "../timer";
+import { Mode } from "../core/timer/timer";
 import { CurrentProgressModal } from "../ui/modals/current_progress_modal";
 import {
   TASK_TIMER_VIEW_TYPE,

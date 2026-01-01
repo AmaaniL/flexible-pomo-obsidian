@@ -10,7 +10,7 @@ import {
   PomoSettingTab,
 } from "./settings/settings";
 import { SavingSuggester } from "./suggesters/SavingSuggester";
-import { getDailyNoteFile, Mode, Timer } from "./timer";
+import { getDailyNoteFile, Mode, Timer } from "./core/timer/timer";
 import { askCustomTimeModal } from "./ui/modals/custom_time_modal";
 import {
   TASK_TIMER_VIEW_TYPE,

@@ -1,5 +1,5 @@
 import FlexiblePomoTimerPlugin from "../main";
-import { Mode } from "../timer";
+import { Mode } from "../core/timer/timer";
 
 export class WhiteNoise {
   plugin: FlexiblePomoTimerPlugin;
