@@ -1,20 +1,11 @@
-import {
-  App,
-  FuzzyMatch,
-  FuzzySuggestModal,
-  moment,
-  Notice,
-  TFile,
-  TFolder,
-} from "obsidian";
-import { get_tfiles_from_folder } from "src/flexipomosuggesters/Utils";
-import { errorWrapperSync } from "./errorWrapper";
+import { App, FuzzyMatch, FuzzySuggestModal, TFile, TFolder } from "obsidian";
 import { log_error } from "src/flexipomosuggesters/Log";
+import { get_tfiles_from_folder } from "src/flexipomosuggesters/Utils";
 import FlexiblePomoTimerPlugin from "../main";
-import { AppHelper } from "./app-helper";
-import { WorkItem } from "../workbench/workitem";
 import { FileUtility } from "../persistence/file_utility";
 import { FilePath } from "../workbench/workbench_data";
+import { AppHelper } from "./app-helper";
+import { errorWrapperSync } from "./errorWrapper";
 
 export enum OpenMode {
   InsertTemplate,

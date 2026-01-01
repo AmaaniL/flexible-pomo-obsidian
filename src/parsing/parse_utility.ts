@@ -1,8 +1,8 @@
-import { PomoTaskItem } from "./core/tasks/pomo_task_item";
-import FlexiblePomoTimerPlugin from "./main";
-import { WorkItem } from "./workbench/workitem";
+import { PomoTaskItem } from "../core/tasks/pomo_task_item";
+import FlexiblePomoTimerPlugin from "../main";
+import { WorkItem } from "../workbench/workitem";
 import { TFile } from "obsidian";
-import { parseDurationFromText } from "./utils";
+import { parseDurationFromText } from "../utils";
 
 export class ParseUtility {
   plugin: FlexiblePomoTimerPlugin;
