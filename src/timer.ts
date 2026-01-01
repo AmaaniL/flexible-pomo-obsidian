@@ -1,19 +1,18 @@
+import moment, { Moment } from "moment";
+import type { TFile } from "obsidian";
 import { Notice } from "obsidian";
-import type { TFolder, TFile } from "obsidian";
 import {
-  getDailyNote,
   createDailyNote,
   getAllDailyNotes,
+  getDailyNote,
 } from "obsidian-daily-notes-interface";
-import moment, { Moment } from "moment";
 import { notificationUrl, whiteNoiseUrl } from "./audio_urls";
-import { WhiteNoise } from "./white_noise";
-import { PomoSettings } from "./settings/settings";
-import FlexiblePomoTimerPlugin from "./main";
-import { confirmWithModal } from "./extend_modal";
 import { PomoTaskItem } from "./core/tasks/pomo_task_item";
+import { confirmWithModal } from "./ui/modals/extend_modal";
+import FlexiblePomoTimerPlugin from "./main";
+import { PomoSettings } from "./settings/settings";
+import { WhiteNoise } from "./white_noise";
 import { WorkItem } from "./workbench/workitem";
-import { TaskRuntime } from "./core/tasks/task_runtime";
 
 const MILLISECS_IN_MINUTE = 60 * 1000;
 const electron = require("electron");

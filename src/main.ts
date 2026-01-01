@@ -11,17 +11,17 @@ import {
 } from "./settings/settings";
 import { SavingSuggester } from "./suggesters/SavingSuggester";
 import { getDailyNoteFile, Mode, Timer } from "./timer";
-import { askCustomTimeModal } from "./ui/custom_time_modal";
+import { askCustomTimeModal } from "./ui/modals/custom_time_modal";
 import {
   TASK_TIMER_VIEW_TYPE,
   TaskTimerPane,
 } from "./views/task_timer/task_timer_pane";
+import { WorkbenchItemsListView } from "./views/workbench/workbench_view";
 import FlexiblePomoWorkbench from "./workbench/workbench";
 import {
   DEFAULT_DATA,
   WorkbenchItemsListViewType,
 } from "./workbench/workbench_data";
-import { WorkbenchItemsListView } from "./views/workbench/workbench_view";
 import { WorkItem } from "./workbench/workitem";
 
 export default class FlexiblePomoTimerPlugin extends Plugin {

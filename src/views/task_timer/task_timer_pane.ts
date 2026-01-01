@@ -1,7 +1,7 @@
 import { ItemView, WorkspaceLeaf } from "obsidian";
 import { PomoTaskItem } from "../../core/tasks/pomo_task_item";
 import { TaskRuntime } from "../../core/tasks/task_runtime";
-import { ExpirationModal } from "../../expiration_modal";
+import { ExpirationModal } from "../../ui/modals/expiration_modal";
 import { FilePersistence } from "../../file_persistence";
 import FlexiblePomoTimerPlugin from "../../main";
 import { WorkItem } from "../../workbench/workitem";

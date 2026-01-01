@@ -1,6 +1,6 @@
-import { Modal, TFile } from "obsidian";
-import FlexiblePomoTimerPlugin from "./main";
-import { WorkItem } from "./workbench/workitem";
+import { Modal } from "obsidian";
+import FlexiblePomoTimerPlugin from "../../main";
+import { WorkItem } from "../../workbench/workitem";
 
 export class CurrentProgressModal extends Modal {
   private plugin: FlexiblePomoTimerPlugin;

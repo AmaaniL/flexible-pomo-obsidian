@@ -12,7 +12,7 @@ import {
 import { WorkItem } from "../workbench/workitem";
 import { PomoTaskItem } from "src/core/tasks/pomo_task_item";
 import { Mode } from "../timer";
-import { CurrentProgressModal } from "../current_progress_modal";
+import { CurrentProgressModal } from "../ui/modals/current_progress_modal";
 import {
   TASK_TIMER_VIEW_TYPE,
   TaskTimerPane,

@@ -1,5 +1,5 @@
 import { App, Modal, Notice } from "obsidian";
-import { TaskRuntime } from "./core/tasks/task_runtime";
+import { TaskRuntime } from "../../core/tasks/task_runtime";
 export class ExpirationModal extends Modal {
   private runtime: TaskRuntime;
   private onComplete: () => void;

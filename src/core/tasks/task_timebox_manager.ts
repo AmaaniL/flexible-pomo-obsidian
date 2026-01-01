@@ -4,7 +4,7 @@ import { PomoTaskItem } from "./pomo_task_item";
 import { Timer } from "src/timer";
 import { Notice } from "obsidian";
 import { App } from "obsidian";
-import { ExpirationModal } from "src/expiration_modal";
+import { ExpirationModal } from "src/ui/modals/expiration_modal";
 
 export class TaskTimeboxManager {
   private app: App;
