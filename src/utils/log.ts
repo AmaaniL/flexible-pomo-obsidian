@@ -1,5 +1,5 @@
 import { Notice } from "obsidian";
-import { TemplaterError } from "./FlexiblePomoError";
+import { TemplaterError } from "./error";
 
 export function log_update(msg: string): void {
   const notice = new Notice("", 15000);

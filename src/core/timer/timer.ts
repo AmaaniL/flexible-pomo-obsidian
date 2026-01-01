@@ -12,7 +12,7 @@ import { confirmWithModal } from "../../ui/modals/extend_modal";
 import FlexiblePomoTimerPlugin from "../../main";
 import { PomoSettings } from "../../settings/settings";
 import { WhiteNoise } from "../../audio/white_noise";
-import { WorkItem } from "../../workbench/workitem";
+import { WorkItem } from "../../workbench/work_item";
 
 const MILLISECS_IN_MINUTE = 60 * 1000;
 const electron = require("electron");

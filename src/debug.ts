@@ -1,6 +1,6 @@
 import FlexiblePomoTimerPlugin from "./main";
 import { TFile } from "obsidian";
-import { WorkItem } from "./workbench/workitem";
+import { WorkItem } from "./workbench/work_item";
 
 export async function runWorkbenchTaskTimerTest(
   plugin: FlexiblePomoTimerPlugin

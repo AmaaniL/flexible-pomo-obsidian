@@ -1,4 +1,4 @@
-import { TemplaterError } from "./FlexiblePomoError";
+import { TemplaterError } from "./error";
 import {
   App,
   normalizePath,

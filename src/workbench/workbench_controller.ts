@@ -9,7 +9,7 @@ import {
   WorkbenchItemsListViewType,
   WorkbenchFilesData,
 } from "./workbench_data";
-import { WorkItem } from "../workbench/workitem";
+import { WorkItem } from "./work_item";
 import { PomoTaskItem } from "src/core/tasks/pomo_task_item";
 import { Mode } from "../core/timer/timer";
 import { CurrentProgressModal } from "../ui/modals/current_progress_modal";

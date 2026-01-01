@@ -6,7 +6,7 @@ import {
   TFile,
   TFolder,
 } from "obsidian";
-import { flatten, uniq } from "../utils/collection";
+import { flatten, uniq } from "../utils/collections";
 import { basename, dirname, extname } from "../utils/path";
 
 export class AppHelper {

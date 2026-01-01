@@ -1,4 +1,4 @@
-import { TemplaterError } from "./FlexiblePomoError";
+import { TemplaterError } from "./error";
 import { log_error } from "./log";
 
 export async function errorWrapper<T>(

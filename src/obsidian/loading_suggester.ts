@@ -5,7 +5,7 @@ import FlexiblePomoTimerPlugin from "../main";
 import { FileUtility } from "../persistence/file_utility";
 import { FilePath } from "../workbench/workbench_data";
 import { AppHelper } from "./app-helper";
-import { errorWrapperSync } from "src/utils/withErrorHandling";
+import { errorWrapperSync } from "src/utils/error_wrapper";
 
 export enum OpenMode {
   InsertTemplate,

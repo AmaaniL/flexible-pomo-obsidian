@@ -2,7 +2,7 @@ import * as feather from "feather-icons";
 import { addIcon, Notice, Plugin, TAbstractFile, TFile } from "obsidian";
 import { runWorkbenchTaskTimerTest } from "./debug";
 import { FileUtility } from "./persistence/file_utility";
-import { LoadingSuggester } from "./obsidian/LoadingSuggester";
+import { LoadingSuggester } from "./obsidian/loading_suggester";
 import { ParseUtility } from "./parsing/parse_utility";
 import {
   DEFAULT_SETTINGS,
@@ -17,12 +17,12 @@ import {
   TaskTimerPane,
 } from "./views/task_timer/task_timer_view";
 import { WorkbenchItemsListView } from "./views/workbench/workbench_view";
-import FlexiblePomoWorkbench from "./workbench/workbench";
+import FlexiblePomoWorkbench from "./workbench/workbench_controller";
 import {
   DEFAULT_DATA,
   WorkbenchItemsListViewType,
 } from "./workbench/workbench_data";
-import { WorkItem } from "./workbench/workitem";
+import { WorkItem } from "./workbench/work_item";
 
 export default class FlexiblePomoTimerPlugin extends Plugin {
   settings: PomoSettings;

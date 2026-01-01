@@ -4,7 +4,7 @@ import { TaskRuntime } from "../../core/tasks/task_runtime";
 import { ExpirationModal } from "../../ui/modals/expiration_modal";
 import { FilePersistence } from "../../persistence/file_persistence";
 import FlexiblePomoTimerPlugin from "../../main";
-import { WorkItem } from "../../workbench/workitem";
+import { WorkItem } from "../../workbench/work_item";
 export const TASK_TIMER_VIEW_TYPE = "flexible-pomo-task-timer";
 
 export class TaskTimerPane extends ItemView {

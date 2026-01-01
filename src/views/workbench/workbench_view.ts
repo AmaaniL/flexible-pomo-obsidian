@@ -1,6 +1,6 @@
 import { ItemView, Menu, Notice, TFile, WorkspaceLeaf } from "obsidian";
 import FlexiblePomoTimerPlugin from "src/main";
-import FlexiblePomoWorkbench from "src/workbench/workbench";
+import FlexiblePomoWorkbench from "src/workbench/workbench_controller";
 import {
   FilePath,
   WorkbenchFilesData,
