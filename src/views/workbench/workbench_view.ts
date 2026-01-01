@@ -1,12 +1,11 @@
 import { ItemView, Menu, Notice, TFile, WorkspaceLeaf } from "obsidian";
-
-import FlexiblePomoTimerPlugin from "../main";
+import FlexiblePomoTimerPlugin from "src/main";
+import FlexiblePomoWorkbench from "src/workbench/workbench";
 import {
   FilePath,
   WorkbenchFilesData,
   WorkbenchItemsListViewType,
-} from "../workbench/workbench_data";
-import FlexiblePomoWorkbench from "../workbench/workbench";
+} from "src/workbench/workbench_data";
 
 export class WorkbenchItemsListView extends ItemView {
   private readonly plugin: FlexiblePomoTimerPlugin;

@@ -1,7 +1,7 @@
 import { TFile, WorkspaceLeaf } from "obsidian";
 
 import FlexiblePomoTimerPlugin from "../main";
-import { WorkbenchItemsListView } from "./workbench_view";
+import { WorkbenchItemsListView } from "src/views/workbench/workbench_view";
 import {
   DEFAULT_DATA,
   defaultMaxLength,
@@ -13,7 +13,10 @@ import { WorkItem } from "../workbench/workitem";
 import { PomoTaskItem } from "src/core/tasks/pomo_task_item";
 import { Mode } from "../timer";
 import { CurrentProgressModal } from "../current_progress_modal";
-import { TASK_TIMER_VIEW_TYPE, TaskTimerPane } from "../task_timer_pane";
+import {
+  TASK_TIMER_VIEW_TYPE,
+  TaskTimerPane,
+} from "../views/task_timer/task_timer_pane";
 import { ItemView } from "obsidian";
 
 export default class FlexiblePomoWorkbench {

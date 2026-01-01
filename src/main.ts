@@ -1,35 +1,28 @@
-import {
-  addIcon,
-  MarkdownView,
-  Notice,
-  Plugin,
-  TAbstractFile,
-  TFile,
-  WorkspaceLeaf,
-  moment,
-} from "obsidian";
 import * as feather from "feather-icons";
+import { addIcon, Notice, Plugin, TAbstractFile, TFile } from "obsidian";
+import { runWorkbenchTaskTimerTest } from "./debug";
+import { FileUtility } from "./file_utility";
+import { LoadingSuggester } from "./flexipomosuggesters/LoadingSuggester";
+import { ParseUtility } from "./parse_utility";
 import {
   DEFAULT_SETTINGS,
   PomoSettings,
   PomoSettingTab,
 } from "./settings/settings";
+import { SavingSuggester } from "./suggesters/SavingSuggester";
 import { getDailyNoteFile, Mode, Timer } from "./timer";
+import { askCustomTimeModal } from "./ui/custom_time_modal";
+import {
+  TASK_TIMER_VIEW_TYPE,
+  TaskTimerPane,
+} from "./views/task_timer/task_timer_pane";
 import FlexiblePomoWorkbench from "./workbench/workbench";
 import {
   DEFAULT_DATA,
-  FilePath,
   WorkbenchItemsListViewType,
 } from "./workbench/workbench_data";
-import { ParseUtility } from "./parse_utility";
+import { WorkbenchItemsListView } from "./views/workbench/workbench_view";
 import { WorkItem } from "./workbench/workitem";
-import { WorkbenchItemsListView } from "./workbench/workbench_view";
-import { SavingSuggester } from "./suggesters/SavingSuggester";
-import { LoadingSuggester } from "./flexipomosuggesters/LoadingSuggester";
-import { FileUtility } from "./file_utility";
-import { askCustomTimeModal } from "./ui/custom_time_modal";
-import { TASK_TIMER_VIEW_TYPE, TaskTimerPane } from "./task_timer_pane";
-import { runWorkbenchTaskTimerTest } from "./debug";
 
 export default class FlexiblePomoTimerPlugin extends Plugin {
   settings: PomoSettings;
