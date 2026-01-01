@@ -7,9 +7,9 @@ import {
   TFile,
   TFolder,
 } from "obsidian";
-import { get_tfiles_from_folder } from "src/flexipomosuggesters/Utils";
-import { errorWrapperSync } from "../flexipomosuggesters/errorWrapper";
-import { log_error } from "src/flexipomosuggesters/Log";
+import { get_tfiles_from_folder } from "src/utils/utils";
+import { errorWrapperSync } from "../utils/withErrorHandling";
+import { log_error } from "src/utils/log";
 import FlexiblePomoTimerPlugin from "../main";
 import { AppHelper } from "../obsidian/app-helper";
 

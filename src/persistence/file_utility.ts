@@ -1,9 +1,7 @@
 import { normalizePath, Notice, TFile } from "obsidian";
 import Moment from "moment";
 import FlexiblePomoTimerPlugin from "../main";
-import { SavingSuggester } from "../suggesters/SavingSuggester";
-import { AppHelper } from "../flexipomosuggesters/app-helper";
-
+import { AppHelper } from "src/obsidian/app-helper";
 export class FileUtility {
   private plugin: FlexiblePomoTimerPlugin;
 

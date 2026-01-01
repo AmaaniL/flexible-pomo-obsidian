@@ -2,8 +2,8 @@
 
 import { App, TAbstractFile, TFile } from "obsidian";
 import { TextInputSuggest } from "../suggesters/suggest";
-import { get_tfiles_from_folder } from "../flexipomosuggesters/Utils";
-import { errorWrapperSync } from "../flexipomosuggesters/errorWrapper";
+import { get_tfiles_from_folder } from "../utils/utils";
+import { errorWrapperSync } from "../utils/withErrorHandling";
 import FlexiblePomoTimerPlugin from "../main";
 
 export enum FileSuggestMode {
