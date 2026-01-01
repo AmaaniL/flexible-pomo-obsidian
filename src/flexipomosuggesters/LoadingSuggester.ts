@@ -13,7 +13,7 @@ import { log_error } from "src/flexipomosuggesters/Log";
 import FlexiblePomoTimerPlugin from "../main";
 import { AppHelper } from "./app-helper";
 import { WorkItem } from "../workbench/workitem";
-import { FileUtility } from "../file_utility";
+import { FileUtility } from "../persistence/file_utility";
 import { FilePath } from "../workbench/workbench_data";
 
 export enum OpenMode {

@@ -12,7 +12,7 @@ import { errorWrapperSync } from "../flexipomosuggesters/errorWrapper";
 import { log_error } from "src/flexipomosuggesters/Log";
 import FlexiblePomoTimerPlugin from "../main";
 import { AppHelper } from "../flexipomosuggesters/app-helper";
-import { FileUtility } from "../file_utility";
+import { FileUtility } from "../persistence/file_utility";
 
 export enum OpenMode {
   InsertTemplate,

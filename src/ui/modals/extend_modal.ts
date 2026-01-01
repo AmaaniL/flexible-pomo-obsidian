@@ -11,7 +11,7 @@ export async function confirmWithModal(
     thirdaction: "Not for this session",
   }
 ): Promise<boolean> {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     const modal = new ExtendPomodoroModal(app, plugin, text, buttons);
     modal.onClose = () => {
       resolve(modal.confirmed);
@@ -34,7 +34,7 @@ export class ExtendPomodoroModal extends Modal {
   _plugin: FlexiblePomoTimerPlugin;
 
   async display() {
-    new Promise((resolve) => {
+    new Promise(() => {
       this.contentEl.empty();
       this.contentEl.addClass("confirm-modal");
       this.contentEl.createEl("p", {
