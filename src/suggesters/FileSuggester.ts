@@ -2,7 +2,7 @@
 
 import { App, TAbstractFile, TFile } from "obsidian";
 import { TextInputSuggest } from "../suggesters/suggest";
-import { get_tfiles_from_folder } from "../utils/utils";
+import { get_tfiles_from_folder } from "../utils/obsidian_files";
 import { errorWrapperSync } from "../utils/error_wrapper";
 import FlexiblePomoTimerPlugin from "../main";
 
