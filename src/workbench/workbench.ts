@@ -16,7 +16,7 @@ import { CurrentProgressModal } from "../ui/modals/current_progress_modal";
 import {
   TASK_TIMER_VIEW_TYPE,
   TaskTimerPane,
-} from "../views/task_timer/task_timer_pane";
+} from "../views/task_timer/task_timer_view";
 import { ItemView } from "obsidian";
 
 export default class FlexiblePomoWorkbench {

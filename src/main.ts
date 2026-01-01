@@ -15,7 +15,7 @@ import { askCustomTimeModal } from "./ui/modals/custom_time_modal";
 import {
   TASK_TIMER_VIEW_TYPE,
   TaskTimerPane,
-} from "./views/task_timer/task_timer_pane";
+} from "./views/task_timer/task_timer_view";
 import { WorkbenchItemsListView } from "./views/workbench/workbench_view";
 import FlexiblePomoWorkbench from "./workbench/workbench";
 import {
