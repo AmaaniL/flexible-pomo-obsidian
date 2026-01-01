@@ -11,7 +11,7 @@ import { WhiteNoise } from "./white_noise";
 import { PomoSettings } from "./settings/settings";
 import FlexiblePomoTimerPlugin from "./main";
 import { confirmWithModal } from "./extend_modal";
-import { PomoTaskItem } from "./PomoTaskItem";
+import { PomoTaskItem } from "./pomo_task_item";
 import { WorkItem } from "./workbench/workitem";
 import { TaskRuntime } from "./task_runtime";
 

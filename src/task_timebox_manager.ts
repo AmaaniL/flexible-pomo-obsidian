@@ -1,6 +1,6 @@
 import { WorkItem } from "./workbench/workitem";
 import { TaskRuntime } from "./task_runtime";
-import { PomoTaskItem } from "./PomoTaskItem";
+import { PomoTaskItem } from "./pomo_task_item";
 import { Timer } from "./timer";
 import { Notice } from "obsidian";
 import { App } from "obsidian";

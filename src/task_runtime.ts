@@ -1,4 +1,4 @@
-import { PomoTaskItem } from "./PomoTaskItem";
+import { PomoTaskItem } from "./pomo_task_item";
 
 export class TaskRuntime {
   task: PomoTaskItem;

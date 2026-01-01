@@ -1,5 +1,5 @@
 import { TFile } from "obsidian";
-import { PomoTaskItem } from "../PomoTaskItem";
+import { PomoTaskItem } from "../pomo_task_item";
 import { TaskRuntime } from "../task_runtime";
 
 export class WorkItem {
