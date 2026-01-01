@@ -7,9 +7,9 @@ import {
   Setting,
 } from "obsidian";
 import { appHasDailyNotesPluginLoaded } from "obsidian-daily-notes-interface";
-import { whiteNoiseUrl } from "../audio_urls";
+import { whiteNoiseUrl } from "../audio/audio_urls";
 import FlexiblePomoTimerPlugin from "../main";
-import { WhiteNoise } from "../white_noise";
+import { WhiteNoise } from "../audio/white_noise";
 import { FolderSuggest } from "../suggesters/FolderSuggester";
 import { WorkbenchItemsListViewType } from "../workbench/workbench_data";
 
