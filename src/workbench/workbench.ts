@@ -10,7 +10,7 @@ import {
   WorkbenchFilesData,
 } from "./workbench_data";
 import { WorkItem } from "../workbench/workitem";
-import { PomoTaskItem } from "../pomo_task_item";
+import { PomoTaskItem } from "src/core/tasks/pomo_task_item";
 import { Mode } from "../timer";
 import { CurrentProgressModal } from "../current_progress_modal";
 import { TASK_TIMER_VIEW_TYPE, TaskTimerPane } from "../task_timer_pane";

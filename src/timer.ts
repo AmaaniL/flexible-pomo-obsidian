@@ -11,9 +11,9 @@ import { WhiteNoise } from "./white_noise";
 import { PomoSettings } from "./settings/settings";
 import FlexiblePomoTimerPlugin from "./main";
 import { confirmWithModal } from "./extend_modal";
-import { PomoTaskItem } from "./pomo_task_item";
+import { PomoTaskItem } from "./core/tasks/pomo_task_item";
 import { WorkItem } from "./workbench/workitem";
-import { TaskRuntime } from "./task_runtime";
+import { TaskRuntime } from "./core/tasks/task_runtime";
 
 const MILLISECS_IN_MINUTE = 60 * 1000;
 const electron = require("electron");

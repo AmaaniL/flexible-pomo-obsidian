@@ -1,11 +1,10 @@
 import { App, ItemView, WorkspaceLeaf } from "obsidian";
 import FlexiblePomoTimerPlugin from "./main";
 import { WorkItem } from "./workbench/workitem";
-import { TaskRuntime } from "./task_runtime";
+import { TaskRuntime } from "./core/tasks/task_runtime";
 import { ExpirationModal } from "./expiration_modal";
 import { FilePersistence } from "./file_persistence";
-import { PomoTaskItem } from "./pomo_task_item";
-
+import { PomoTaskItem } from "./core/tasks/pomo_task_item";
 export const TASK_TIMER_VIEW_TYPE = "flexible-pomo-task-timer";
 
 export class TaskTimerPane extends ItemView {

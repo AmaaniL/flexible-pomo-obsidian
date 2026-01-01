@@ -1,10 +1,10 @@
-import { WorkItem } from "./workbench/workitem";
+import { WorkItem } from "src/workbench/workitem";
 import { TaskRuntime } from "./task_runtime";
 import { PomoTaskItem } from "./pomo_task_item";
-import { Timer } from "./timer";
+import { Timer } from "src/timer";
 import { Notice } from "obsidian";
 import { App } from "obsidian";
-import { ExpirationModal } from "./expiration_modal";
+import { ExpirationModal } from "src/expiration_modal";
 
 export class TaskTimeboxManager {
   private app: App;

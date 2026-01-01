@@ -1,6 +1,6 @@
 import { TFile } from "obsidian";
-import { PomoTaskItem } from "../pomo_task_item";
-import { TaskRuntime } from "../task_runtime";
+import { PomoTaskItem } from "src/core/tasks/pomo_task_item";
+import { TaskRuntime } from "src/core/tasks/task_runtime";
 
 export class WorkItem {
   activeNote: TFile;

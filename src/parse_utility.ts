@@ -1,4 +1,4 @@
-import { PomoTaskItem } from "./pomo_task_item";
+import { PomoTaskItem } from "./core/tasks/pomo_task_item";
 import FlexiblePomoTimerPlugin from "./main";
 import { WorkItem } from "./workbench/workitem";
 import { TFile } from "obsidian";
