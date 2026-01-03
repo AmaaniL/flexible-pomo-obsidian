@@ -5,6 +5,7 @@ import { Timer } from "src/core/timer/timer";
 import { Notice } from "obsidian";
 import { App } from "obsidian";
 import { ExpirationModal } from "src/ui/modals/expiration_modal";
+import { DayPlannerExporter } from "src/integrations/day_planner_exporter";
 
 export class TaskTimeboxManager {
   private app: App;
@@ -12,11 +13,13 @@ export class TaskTimeboxManager {
   private runtimes: Map<PomoTaskItem, TaskRuntime>;
   private activeRuntime: TaskRuntime | null;
   private timer: Timer;
+  private dayPlanner: DayPlannerExporter;
 
   constructor(app: App, workItem: WorkItem, timer: Timer) {
     this.app = app;
     this.workItem = workItem;
     this.timer = timer;
+    this.dayPlanner = new DayPlannerExporter(app);
     this.runtimes = workItem.runtimes;
     this.activeRuntime = null;
   }
@@ -86,18 +89,19 @@ export class TaskTimeboxManager {
   }
 
   /** Mark the active task as completed */
-  completeActiveTask() {
+  async completeActiveTask() {
     if (!this.activeRuntime) return;
 
     this.activeRuntime.pause();
     this.activeRuntime.completed = true;
+
+    await this.dayPlanner.exportRuntime(this.activeRuntime);
 
     const completedTask = this.activeRuntime.task;
     this.activeRuntime = null;
 
     return completedTask;
   }
-
   /** Extend time for the active task */
   extendActiveTask(extraMs: number) {
     if (!this.activeRuntime) return;
@@ -140,8 +144,9 @@ export class TaskTimeboxManager {
     new ExpirationModal(
       this.app,
       runtime,
-      () => {
+      async () => {
         runtime.completed = true;
+        await this.dayPlanner.exportRuntime(runtime);
       },
       (extraMs) => {
         runtime.remainingMs = extraMs;
