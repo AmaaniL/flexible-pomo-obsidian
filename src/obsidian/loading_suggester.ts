@@ -1,6 +1,6 @@
 import { App, FuzzyMatch, FuzzySuggestModal, TFile, TFolder } from "obsidian";
 import { log_error } from "src/utils/log";
-import { get_tfiles_from_folder } from "../utils/utils";
+import { get_tfiles_from_folder } from "src/utils/obsidian_files";
 import FlexiblePomoTimerPlugin from "../main";
 import { FileUtility } from "../persistence/file_utility";
 import { FilePath } from "../workbench/workbench_data";
