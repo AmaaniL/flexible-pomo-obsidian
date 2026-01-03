@@ -3,18 +3,13 @@ import FlexiblePomoTimerPlugin from "../main";
 import { WorkItem } from "../workbench/work_item";
 import { TFile } from "obsidian";
 import { parseDurationFromText } from "src/utils/obsidian_files";
+import { parseNaturalDate } from "../utils/parse_natural_date";
 
 export class ParseUtility {
   plugin: FlexiblePomoTimerPlugin;
 
   constructor(plugin: FlexiblePomoTimerPlugin) {
     this.plugin = plugin;
-  }
-
-  /** Parse natural language date using Obsidian's moment parser */
-  private parseNaturalDate(text: string): Date | undefined {
-    const parsed = window.moment(text, true);
-    return parsed.isValid() ? parsed.toDate() : undefined;
   }
 
   /** Gather tasks after pomodoro session */
@@ -96,7 +91,7 @@ export class ParseUtility {
         const estimatedMs = parseDurationFromText(rawText);
 
         // Parse natural language date (optional)
-        const naturalLanguageDate = this.parseNaturalDate(rawText);
+        const naturalLanguageDate = parseNaturalDate(rawText);
 
         // Add task to list
         pomoTaskItems.push(
