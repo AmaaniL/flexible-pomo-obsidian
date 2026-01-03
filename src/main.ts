@@ -23,6 +23,7 @@ import {
   WorkbenchItemsListViewType,
 } from "./workbench/workbench_data";
 import { WorkItem } from "./workbench/work_item";
+import { TimeboxInlineParser } from "./parsing/timebox_inline_parser";
 
 export default class FlexiblePomoTimerPlugin extends Plugin {
   settings: PomoSettings;
@@ -38,6 +39,8 @@ export default class FlexiblePomoTimerPlugin extends Plugin {
   lastOpenedFile: TFile | null = null;
 
   async onload() {
+    const parser = new TimeboxInlineParser(this.app);
+
     this.registerEvent(
       this.app.workspace.on("active-leaf-change", async () => {
         await runWorkbenchTaskTimerTest(this);
@@ -55,7 +58,22 @@ export default class FlexiblePomoTimerPlugin extends Plugin {
     if (this.settings.logging) this.openLogFileOnClick();
 
     this.timer = new Timer(this);
+    this.registerEvent(
+      this.app.vault.on("modify", async (file) => {
+        if (!(file instanceof TFile)) return;
+        if (file.extension !== "md") return;
 
+        const today = window.moment().format("YYYY-MM-DD");
+        if (file.basename !== today) return;
+
+        const content = await this.app.vault.read(file);
+        const lines = content.split("\n");
+
+        for (const line of lines) {
+          parser.parseAndExport(line);
+        }
+      })
+    );
     if (this.settings.ribbonIcon) {
       this.addRibbonIcon("clock", "Start Pomodoro", () => {
         const file = this.getCurrentFile();
@@ -142,10 +160,7 @@ export default class FlexiblePomoTimerPlugin extends Plugin {
     this.registerEvent(this.app.vault.on("rename", this.handleRename));
 
     this.registerPomodoroCommands();
-    this.registerView(
-      TASK_TIMER_VIEW_TYPE,
-      (leaf) => new TaskTimerPane(leaf, this)
-    );
+
     this.addCommand({
       id: "show-task-timer-pane",
       name: "Show Task Timer Pane",
