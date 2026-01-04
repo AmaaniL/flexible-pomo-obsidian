@@ -23,11 +23,12 @@ A flexible Pomodoro timer plugin for Obsidian that helps you manage work session
     
 2. Run:
     
-    `npm install npm run build`
+    `npm install`
+   `npm run build`
     
-3. Enable the plugin in **Settings → Community Plugins**.
+4. Enable the plugin in **Settings → Community Plugins**.
     
-4. Start a Pomodoro by clicking the clock icon or via command:
+5. Start a Pomodoro by clicking the clock icon or via command:
     
     - `Start Pomodoro`
         
@@ -100,14 +101,18 @@ Clone, build, enable in Obsidian, and restart the app if needed.
 
 Pull requests are welcome! Please follow conventional commits:
 
-`feat: add new feature 
-fix: fix bug
-docs: documentation changes 
-refactor: non-functional code cleanup`
+`feat: add new feature `
+
+`fix: fix bug`
+
+`docs: documentation changes `
+
+`refactor: non-functional code cleanup`
 
 ---
 
 ##  License
 
 MIT
+
 
