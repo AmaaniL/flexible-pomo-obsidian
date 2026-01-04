@@ -100,10 +100,14 @@ Clone, build, enable in Obsidian, and restart the app if needed.
 
 Pull requests are welcome! Please follow conventional commits:
 
-`feat: add new feature fix: fix bug docs: documentation changes refactor: non-functional code cleanup`
+`feat: add new feature 
+fix: fix bug
+docs: documentation changes 
+refactor: non-functional code cleanup`
 
 ---
 
 ##  License
 
 MIT
+
