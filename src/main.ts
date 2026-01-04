@@ -70,7 +70,7 @@ export default class FlexiblePomoTimerPlugin extends Plugin {
         const lines = content.split("\n");
 
         for (const line of lines) {
-          parser.parseAndExport(line);
+          await parser.parseAndExport(line, file);
         }
       })
     );
